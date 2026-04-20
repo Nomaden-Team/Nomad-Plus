@@ -1,3 +1,5 @@
+// lib/data/datasources/voucher_remote.dart
+
 import '../../core/services/supabase_service.dart';
 
 class VoucherRemote {
@@ -27,6 +29,24 @@ class VoucherRemote {
         .toList();
   }
 
+  // FUNGSI BARU: Update used_count di tabel vouchers
+  Future<void> incrementVoucherUsedCount(String voucherId) async {
+    // Mengambil nilai saat ini
+    final currentData = await client
+        .from('vouchers')
+        .select('used_count')
+        .eq('id', voucherId)
+        .single();
+    
+    int currentCount = currentData['used_count'] ?? 0;
+
+    // Update dengan nilai baru
+    await client
+        .from('vouchers')
+        .update({'used_count': currentCount + 1})
+        .eq('id', voucherId);
+  }
+
   Future<int> getUserUsageCount({
     required String voucherId,
     required String userId,
@@ -40,23 +60,18 @@ class VoucherRemote {
     return (res as List).length;
   }
 
-  Future<Map<String, int>> getUserUsageCountMapByVoucherId(
-    String userId,
-  ) async {
+  Future<Map<String, int>> getUserUsageCountMapByVoucherId(String userId) async {
     final res = await client
         .from('voucher_usages')
         .select('voucher_id')
         .eq('user_id', userId);
 
     final map = <String, int>{};
-
     for (final row in (res as List)) {
       final voucherId = (row['voucher_id'] ?? '').toString();
       if (voucherId.isEmpty) continue;
-
       map[voucherId] = (map[voucherId] ?? 0) + 1;
     }
-
     return map;
   }
 
@@ -71,20 +86,5 @@ class VoucherRemote {
       'order_id': orderId,
       'used_at': DateTime.now().toIso8601String(),
     });
-  }
-
-  Future<void> incrementUsedCount(String voucherId) async {
-    final current = await client
-        .from('vouchers')
-        .select('used_count')
-        .eq('id', voucherId)
-        .single();
-
-    final usedCount = (current['used_count'] ?? 0) as int;
-
-    await client
-        .from('vouchers')
-        .update({'used_count': usedCount + 1})
-        .eq('id', voucherId);
   }
 }

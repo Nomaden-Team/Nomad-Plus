@@ -76,20 +76,29 @@ class AdminVoucherController extends GetxController {
 
       await fetchVouchers();
 
-      Get.snackbar(
-        'Berhasil',
-        voucherId == null || voucherId.isEmpty
-            ? 'Voucher berhasil ditambahkan.'
-            : 'Voucher berhasil diperbarui.',
-      );
+      // PERBAIKAN: Delay snackbar agar tidak "dimakan" oleh Get.back() dari UI
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Get.snackbar(
+          'Berhasil',
+          voucherId == null || voucherId.isEmpty
+              ? 'Voucher berhasil ditambahkan.'
+              : 'Voucher berhasil diperbarui.',
+        );
+      });
 
       return true;
     } catch (e) {
       final message = e.toString().replaceFirst('Exception: ', '');
-      Get.snackbar(
-        'Belum berhasil',
-        message.isEmpty ? 'Voucher belum bisa disimpan.' : message,
-      );
+      
+      // Delay juga untuk error agar form bisa ditutup (jika UI menutup form saat error)
+      // atau biarkan jika UI tidak melakukan Get.back() saat error
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Get.snackbar(
+          'Belum berhasil',
+          message.isEmpty ? 'Voucher belum bisa disimpan.' : message,
+        );
+      });
+      
       Get.log('AdminVoucherController.saveVoucher error: $e');
       return false;
     } finally {

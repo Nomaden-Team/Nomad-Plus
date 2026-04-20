@@ -213,7 +213,6 @@ Data utama setiap transaksi. Menjadi pusat relasi dengan tabel `users`, `branche
 | `branch_id` | FK → `branches` |
 | `voucher_id` | FK → `vouchers` (nullable) |
 | `queue_number` | Nomor antrean yang dibuat otomatis setelah checkout |
-| `payment_method` | Metode pembayaran (`cash` / `non-cash`) |
 | `status` | Status pesanan (`pending` / `confirmed` / `done`) |
 | `order_type` | Jenis pesanan (`dine-in` / `take-away`) |
 | `subtotal` | Total harga sebelum diskon |
@@ -254,6 +253,7 @@ Data seluruh pengguna aplikasi beserta sistem loyalty. Field `total_earned_point
 |-------|------------|
 | `id` | Primary key |
 | `auth_id` | UUID dari Supabase Auth |
+| `branch_id` | FK → `branches` |
 | `name` | Nama lengkap |
 | `email` | Email untuk login |
 | `phone` | Nomor telepon |
@@ -281,6 +281,7 @@ Data seluruh voucher yang tersedia. Admin dapat mengatur minimal belanja, batas 
 |-------|------------|
 | `id` | Primary key |
 | `created_by` | FK → `users` (admin) |
+| `branch_id` | FK → `branches` |
 | `code` | Kode unik voucher |
 | `name` | Nama voucher |
 | `type` | Jenis diskon (persentase / nominal tetap) |

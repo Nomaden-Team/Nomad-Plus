@@ -472,7 +472,7 @@ class _VoucherCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    voucher.typeLabel,
+                    voucher.typeLabel,  
                     style: AppTextStyles.bodySecondary.copyWith(
                       fontSize: 13,
                       height: 1.45,

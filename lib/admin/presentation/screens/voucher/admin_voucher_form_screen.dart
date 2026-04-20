@@ -54,9 +54,9 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
     expiryDateCtrl = TextEditingController();
 
     final args = Get.arguments as Map<String, dynamic>?;
-    voucherId = (args?['id'] ?? '').toString();
-
     final voucher = args?['voucher'] as Map<String, dynamic>?;
+
+    voucherId = (args?['id'] ?? voucher?['id'] ?? '').toString();
     if (voucher != null) {
       _fillForm(voucher);
     } else {
@@ -100,10 +100,13 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
     codeCtrl.text = (voucher['code'] ?? '').toString();
     nameCtrl.text = (voucher['name'] ?? '').toString();
     discountValueCtrl.text = _toInt(voucher['discount_value']).toString();
-    maxDiscountCtrl.text = _toNullableInt(voucher['max_discount'])?.toString() ?? '';
+    maxDiscountCtrl.text =
+        _toNullableInt(voucher['max_discount'])?.toString() ?? '';
     minTransactionCtrl.text = _toInt(voucher['min_order_value']).toString();
-    usageLimitCtrl.text = _toNullableInt(voucher['usage_limit'])?.toString() ?? '';
-    usagePerUserCtrl.text = _toNullableInt(voucher['usage_per_user'])?.toString() ?? '';
+    usageLimitCtrl.text =
+        _toNullableInt(voucher['usage_limit'])?.toString() ?? '';
+    usagePerUserCtrl.text =
+        _toNullableInt(voucher['usage_per_user'])?.toString() ?? '';
     startDateCtrl.text = _dateOnly(voucher['start_date']);
     expiryDateCtrl.text = _dateOnly(voucher['expiry_date']);
     discountType.value = _normalizeUiType(voucher['type']);
@@ -132,8 +135,8 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
       'discount_value': int.tryParse(discountValueCtrl.text.trim()) ?? 0,
       'max_discount': discountType.value == 'percent'
           ? (maxDiscountCtrl.text.trim().isEmpty
-              ? null
-              : int.tryParse(maxDiscountCtrl.text.trim()))
+                ? null
+                : int.tryParse(maxDiscountCtrl.text.trim()))
           : null,
       'min_order_value': int.tryParse(minTransactionCtrl.text.trim()) ?? 0,
       'usage_limit': usageLimitCtrl.text.trim().isEmpty
@@ -147,14 +150,14 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
       'is_active': isActive.value,
       'used_count': isEdit ? null : 0,
     };
-
-    await voucherController.saveVoucher(
+    final success = await voucherController.saveVoucher(
       voucherId: isEdit ? voucherId : null,
       payload: payload,
     );
 
-    if (mounted) {
+    if (success) {
       Get.back();
+      voucherController.fetchVouchers();
     }
   }
 
@@ -229,7 +232,8 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
                             ],
                           )
                         : Obx(() {
-                            final branchName = homeController.branchName.value.trim();
+                            final branchName = homeController.branchName.value
+                                .trim();
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +261,9 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   branchName.isEmpty
-                                      ? (isEdit ? 'Edit Voucher' : 'Tambah Voucher')
+                                      ? (isEdit
+                                            ? 'Edit Voucher'
+                                            : 'Tambah Voucher')
                                       : branchName,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -304,12 +310,15 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
                     label: 'Kode Voucher',
                     controller: codeCtrl,
                     hint: 'Contoh: NOMADHEMAT',
-                    helper: 'Hanya huruf, angka, strip, dan underscore. Tanpa spasi.',
+                    helper:
+                        'Hanya huruf, angka, strip, dan underscore. Tanpa spasi.',
                     icon: Icons.confirmation_number_outlined,
                     textCapitalization: TextCapitalization.characters,
                     maxLength: 20,
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9\-_a-z]')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[A-Z0-9\-_a-z]'),
+                      ),
                       UpperCaseTextFormatter(),
                     ],
                     validator: _validateVoucherCode,
@@ -343,8 +352,10 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            validator: (value) =>
-                                _validateDiscountValue(value, discountType.value),
+                            validator: (value) => _validateDiscountValue(
+                              value,
+                              discountType.value,
+                            ),
                           ),
                         ),
                       ),
@@ -557,7 +568,8 @@ class _AdminVoucherFormScreenState extends State<AdminVoucherFormScreen> {
   String? _validateStartDate(String? value) {
     final text = (value ?? '').trim();
     if (text.isEmpty) return 'Tanggal mulai wajib diisi';
-    if (DateTime.tryParse(text) == null) return 'Format tanggal mulai tidak valid';
+    if (DateTime.tryParse(text) == null)
+      return 'Format tanggal mulai tidak valid';
     return null;
   }
 

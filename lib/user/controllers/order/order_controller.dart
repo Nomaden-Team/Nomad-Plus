@@ -28,7 +28,6 @@ class OrderController extends GetxController {
   String paymentMethod = 'NomadPay';
 
   RealtimeChannel? _channel;
-
   bool _lastLoginState = false;
 
   VoucherController get voucherController {
@@ -48,11 +47,8 @@ class OrderController extends GetxController {
 
   int get maxPointsUsable {
     if (!appState.isLoggedIn) return 0;
-
     final maxByBalance = appState.user.loyaltyPoints;
-    final maxByBusinessRule =
-        subtotalPreview ~/ 10000; // 10% subtotal, 1 poin = Rp1.000
-
+    final maxByBusinessRule = subtotalPreview ~/ 10000;
     return maxByBalance < maxByBusinessRule ? maxByBalance : maxByBusinessRule;
   }
 
@@ -78,7 +74,6 @@ class OrderController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-
     if (appState.isLoggedIn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         fetchOrders();
@@ -88,14 +83,10 @@ class OrderController extends GetxController {
 
   void _handleAppStateChanged() {
     final isLoggedIn = appState.isLoggedIn;
-
     if (isLoggedIn && !_lastLoginState) {
       _lastLoginState = true;
       fetchOrders();
-      return;
-    }
-
-    if (!isLoggedIn && _lastLoginState) {
+    } else if (!isLoggedIn && _lastLoginState) {
       _lastLoginState = false;
       orders = [];
       currentOrder = null;
@@ -108,7 +99,6 @@ class OrderController extends GetxController {
   Future<void> fetchOrders() async {
     try {
       if (!appState.isLoggedIn) return;
-
       final userId = appState.user.id;
       if (userId.isEmpty) return;
 
@@ -125,12 +115,16 @@ class OrderController extends GetxController {
     }
   }
 
+  // --- REFRESH CHECKOUT (Penting untuk Status Order Screen) ---
+  void refreshCheckout() {
+    update();
+  }
+
   void goToCheckout() {
     if (cart.isEmpty) {
       Get.snackbar('Keranjang kosong', 'Tambahkan menu terlebih dahulu.');
       return;
     }
-
     isCheckoutMode = true;
     currentOrder = null;
     orderType = 'takeaway';
@@ -138,7 +132,6 @@ class OrderController extends GetxController {
     voucherController.clearAppliedVoucher();
     appState.clearCheckoutPoints();
     update();
-
     Get.toNamed(AppRoutes.orderStatus);
   }
 
@@ -146,17 +139,8 @@ class OrderController extends GetxController {
     currentOrder = order;
     isCheckoutMode = false;
     update();
-
-    Get.log('=== openExistingOrder ===');
-    Get.log('order.id: ${order.id}');
-    Get.log('order.status: ${order.status}');
-    Get.log('isActive: ${order.status.isActive}');
-
     if (order.status.isActive) {
-      Get.log('>>> listenOrder dipanggil');
       listenOrder(order.id);
-    } else {
-      Get.log('>>> listenOrder TIDAK dipanggil');
     }
   }
 
@@ -175,7 +159,6 @@ class OrderController extends GetxController {
       Get.snackbar('Login diperlukan', 'Kamu harus login dulu.');
       return;
     }
-
     if (voucherController.appliedVoucher.value != null) {
       Get.snackbar(
         'Tidak bisa dipakai',
@@ -183,33 +166,21 @@ class OrderController extends GetxController {
       );
       return;
     }
-
     final validPoints = points.clamp(0, maxPointsUsable);
     appState.setCheckoutPointsToUse(validPoints);
     update();
   }
 
-  void applyMaxPoints() {
-    applyPoints(maxPointsUsable);
-  }
+  void applyMaxPoints() => applyPoints(maxPointsUsable);
 
   void clearPoints() {
     appState.clearCheckoutPoints();
     update();
   }
 
-  void refreshCheckout() {
-    update();
-  }
-
   void listenOrder(String orderId) {
     _channel?.unsubscribe();
-    _channel = null;
-
-    Get.log('=== listenOrder START: $orderId ===');
-
     _channel = client.channel('orders-$orderId');
-
     _channel!
         .onPostgresChanges(
           event: PostgresChangeEvent.update,
@@ -221,29 +192,19 @@ class OrderController extends GetxController {
             value: orderId,
           ),
           callback: (payload) {
-            Get.log('=== REALTIME PAYLOAD DITERIMA ===');
-            Get.log('newRecord: ${payload.newRecord}');
-
             final data = payload.newRecord;
             final updatedStatus = _parseStatus(data['status']);
-
-            Get.log('updatedStatus: $updatedStatus');
-
             if (currentOrder != null) {
               currentOrder = currentOrder!.copyWith(status: updatedStatus);
             }
-
             final index = orders.indexWhere((e) => e.id == orderId);
             if (index >= 0) {
               orders[index] = orders[index].copyWith(status: updatedStatus);
             }
-
             update();
           },
         )
-        .subscribe((status, [error]) {
-          Get.log('=== CHANNEL STATUS: $status, error: $error ===');
-        });
+        .subscribe();
   }
 
   OrderStatus _parseStatus(String? value) {
@@ -261,43 +222,59 @@ class OrderController extends GetxController {
     }
   }
 
+  // --- LOGIKA QUEUE (Lengkap seperti file awal) ---
+  int _extractQueueNumber(dynamic rawQueue) {
+    if (rawQueue == null) return 0;
+    final queueString = rawQueue.toString().trim();
+    if (queueString.isEmpty) return 0;
+
+    if (queueString.contains('-')) {
+      final parts = queueString.split('-');
+      final numericPart = parts.isNotEmpty ? parts.last.trim() : '';
+      return int.tryParse(numericPart) ?? 0;
+    }
+    return int.tryParse(queueString) ?? 0;
+  }
+
   Future<String> _generateSimpleQueue(String branchId) async {
     try {
-      // Pakai Postgres Function agar bisa baca semua order (bypass RLS)
-      final result = await client.rpc('get_next_queue_number');
-      final nextNum = (result as int?) ?? 1;
-      return nextNum.toString().padLeft(3, '0');
-    } catch (e, stack) {
-      Get.log('_generateSimpleQueue error: $e');
-      Get.log('stack: $stack');
-      return (orders.length + 1).toString().padLeft(3, '0');
+      final now = DateTime.now();
+      final startToday = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).toIso8601String();
+      final startTomorrow = DateTime(
+        now.year,
+        now.month,
+        now.day + 1,
+      ).toIso8601String();
+
+      final result = await client
+          .from('orders')
+          .select('queue_number')
+          .eq('branch_id', branchId)
+          .gte('created_at', startToday)
+          .lt('created_at', startTomorrow)
+          .order('created_at', ascending: false);
+
+      final rows = (result as List?) ?? [];
+      int maxQueue = 0;
+      for (final row in rows) {
+        final qNum = _extractQueueNumber(row['queue_number']);
+        if (qNum > maxQueue) maxQueue = qNum;
+      }
+      return (maxQueue + 1).toString().padLeft(3, '0');
+    } catch (e) {
+      return '001';
     }
   }
 
   Future<dynamic> confirmOrder() async {
-    if (isLoading) {
-      return 'Sedang memproses order...';
-    }
-
-    if (cart.isEmpty) {
-      return 'Keranjang masih kosong.';
-    }
-
-    if (!appState.isLoggedIn) {
-      return 'Kamu harus login dulu.';
-    }
-
-    if (appState.user.id.isEmpty) {
-      return 'Data user belum valid.';
-    }
-
-    if (appState.selectedBranch == null) {
-      return 'Cabang belum dipilih.';
-    }
-
-    if (pointsToUse > 0 && appliedVoucherCode != null) {
-      return 'Poin dan voucher tidak bisa digunakan bersamaan.';
-    }
+    if (isLoading) return 'Sedang memproses order...';
+    if (cart.isEmpty) return 'Keranjang masih kosong.';
+    if (!appState.isLoggedIn) return 'Kamu harus login dulu.';
+    if (appState.selectedBranch == null) return 'Cabang belum dipilih.';
 
     try {
       isLoading = true;
@@ -305,12 +282,13 @@ class OrderController extends GetxController {
 
       final branch = appState.selectedBranch!;
       final queue = await _generateSimpleQueue(branch.id);
+
       final subtotal = subtotalPreview;
-      final discountAmount = voucherDiscountPreview;
+      final discount = voucherDiscountPreview;
       final grandTotal = grandTotalPreview;
 
       final isUsingVoucher =
-          appliedVoucherCode != null && appliedVoucherCode!.trim().isNotEmpty;
+          appliedVoucherCode != null && appliedVoucherCode!.isNotEmpty;
       final isUsingPoints = pointsToUse > 0;
 
       final earnedPoints = (!isUsingVoucher && !isUsingPoints)
@@ -328,7 +306,7 @@ class OrderController extends GetxController {
         status: OrderStatus.pending,
         createdAt: DateTime.now(),
         subtotal: subtotal,
-        discountAmount: discountAmount,
+        discountAmount: discount,
         serviceFee: 0,
         grandTotal: grandTotal,
         pointsEarned: earnedPoints,
@@ -345,29 +323,25 @@ class OrderController extends GetxController {
         used: order.pointsUsed,
       );
 
-      currentOrder = saved;
-      isCheckoutMode = false;
-
-      if (appliedVoucherCode != null && appliedVoucherCode!.trim().isNotEmpty) {
+      if (isUsingVoucher) {
+        await voucherController.finalizeVoucherUsage(saved.id);
         appState.markVoucherUsed(appliedVoucherCode!);
       }
 
+      currentOrder = saved;
+      isCheckoutMode = false;
       cart.clearCart();
       voucherController.clearAppliedVoucher();
       appState.clearCheckoutPoints();
 
       await fetchOrders();
-      listenOrder(
-        saved.id,
-      ); // pasang listener SETELAH fetchOrders agar tidak di-overwrite
+      listenOrder(saved.id);
       update();
 
       return saved;
     } on PostgrestException catch (e) {
-      Get.log('confirmOrder PostgrestException: ${e.message}');
       return _mapCheckoutDbError(e);
     } catch (e) {
-      Get.log('confirmOrder unknown error: $e');
       return 'Checkout gagal. Coba lagi.';
     } finally {
       isLoading = false;
@@ -381,8 +355,6 @@ class OrderController extends GetxController {
   }) async {
     try {
       if (!appState.isLoggedIn) return;
-      if (appState.user.id.isEmpty) return;
-
       final userId = appState.user.id;
 
       final current = await client
@@ -390,7 +362,6 @@ class OrderController extends GetxController {
           .select('loyalty_points, total_earned_points')
           .eq('id', userId)
           .single();
-
       final currentPoints = (current['loyalty_points'] ?? 0) as int;
       final currentTotal = (current['total_earned_points'] ?? 0) as int;
 
@@ -420,14 +391,7 @@ class OrderController extends GetxController {
   }
 
   String _mapCheckoutDbError(PostgrestException e) {
-    if (e.code == '42501') {
-      return 'Akses database ditolak. Cek policy RLS Supabase.';
-    }
-
-    if (e.code == '42703') {
-      return 'Kolom database untuk order belum sesuai.';
-    }
-
+    if (e.code == '42501') return 'Akses database ditolak.';
     return 'Gagal menyimpan order ke database.';
   }
 
