@@ -1,0 +1,163 @@
+﻿Analyzing flutter_application_1...                              
+
+  error - Invalid constant value - lib\core\constants\app_text_styles.dart:41:12 - invalid_constant
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\core\constants\app_text_styles.dart:41:22 - undefined_getter
+   info - Unnecessary braces in a string interpolation - lib\data\models\voucher_model.dart:72:50 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\login_screen.dart:77:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\login_screen.dart:94:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\login_screen.dart:126:43 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\auth\login_screen.dart:137:32 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\auth\login_screen.dart:137:46 - undefined_getter
+  error - Invalid constant value - lib\presentation\screens\auth\login_screen.dart:151:36 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\auth\login_screen.dart:151:50 - undefined_getter
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\auth\login_screen.dart:208:50 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\login_screen.dart:386:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\login_screen.dart:388:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\register_screen.dart:81:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\register_screen.dart:90:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\register_screen.dart:136:43 - deprecated_member_use
+  error - The method 'required' isn't defined for the type 'Validators' - lib\presentation\screens\auth\register_screen.dart:159:38 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\register_screen.dart:211:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\auth\register_screen.dart:219:55 - deprecated_member_use
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\auth\register_screen.dart:333:46 - undefined_getter
+warning - Unused import: '../../../data/models/voucher_model.dart' - lib\presentation\screens\cart\cart_screen.dart:8:8 - unused_import
+warning - Unused import: '../../../data/dummy_data.dart' - lib\presentation\screens\cart\cart_screen.dart:9:8 - unused_import
+   info - Statements in an if should be enclosed in a block - lib\presentation\screens\cart\cart_screen.dart:104:35 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\cart\cart_screen.dart:135:51 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:264:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:264:39 - unnecessary_underscores
+  error - The getter 'bodyMedium' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\cart\cart_screen.dart:276:40 - undefined_getter
+  error - Invalid constant value - lib\presentation\screens\cart\cart_screen.dart:353:20 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\cart\cart_screen.dart:353:34 - undefined_getter
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:360:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:377:45 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:377:49 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\cart\cart_screen.dart:425:41 - deprecated_member_use
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\cart\cart_screen.dart:456:40 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\cart\cart_screen.dart:601:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\cart\cart_screen.dart:630:48 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\cart\cart_screen.dart:641:34 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\cart\cart_screen.dart:641:48 - undefined_getter
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:672:43 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\cart\cart_screen.dart:672:47 - unnecessary_underscores
+  error - The getter 'bodyMedium' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\cart\cart_screen.dart:686:54 - undefined_getter
+  error - Invalid constant value - lib\presentation\screens\cart\cart_screen.dart:789:24 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\cart\cart_screen.dart:789:38 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\cart\cart_screen.dart:800:42 - deprecated_member_use
+   info - The variable name '_SummaryRow' isn't a lowerCamelCase identifier - lib\presentation\screens\cart\cart_screen.dart:859:8 - non_constant_identifier_names
+  error - Invalid constant value - lib\presentation\screens\home\home_screen.dart:114:44 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\home\home_screen.dart:114:58 - undefined_getter
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:140:53 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:141:60 - deprecated_member_use
+  error - The named parameter 'gridDelegate' is required, but there's no corresponding argument - lib\presentation\screens\home\home_screen.dart:208:23 - missing_required_argument
+  error - The argument type 'SliverGridDelegateWithFixedCrossAxisCount' can't be assigned to the parameter type 'SliverChildDelegate'.  - lib\presentation\screens\home\home_screen.dart:212:27 - argument_type_not_assignable
+  error - The argument for the named parameter 'delegate' was already specified - lib\presentation\screens\home\home_screen.dart:218:17 - duplicate_named_argument
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:294:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:308:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:323:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:338:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:349:49 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:402:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:435:33 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:435:37 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:436:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:446:34 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:497:33 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:603:43 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\home\home_screen.dart:603:47 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:618:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:633:45 - deprecated_member_use
+  error - The getter 'bodyMedium' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\home\home_screen.dart:649:42 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:722:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:763:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\home\home_screen.dart:764:43 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\loyalty\loyalty_screen.dart:70:49 - invalid_constant
+  error - The values in a const list literal must be constants - lib\presentation\screens\loyalty\loyalty_screen.dart:70:49 - non_constant_list_element
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\loyalty\loyalty_screen.dart:70:59 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:87:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:101:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:104:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:263:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:267:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:275:43 - deprecated_member_use
+  error - The getter 'accent' isn't defined for the type 'AppColors' - lib\presentation\screens\loyalty\loyalty_screen.dart:315:31 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\loyalty\loyalty_screen.dart:418:50 - deprecated_member_use
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\loyalty\loyalty_screen.dart:478:39 - undefined_getter
+   info - Unnecessary braces in a string interpolation - lib\presentation\screens\menu\menu_detail_sheet.dart:61:25 - unnecessary_brace_in_string_interps
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_detail_sheet.dart:93:43 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_detail_sheet.dart:93:47 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_detail_sheet.dart:105:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_detail_sheet.dart:141:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_detail_sheet.dart:152:45 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\menu\menu_detail_sheet.dart:197:34 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\menu\menu_detail_sheet.dart:197:48 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_detail_sheet.dart:202:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_detail_sheet.dart:232:53 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\menu\menu_detail_sheet.dart:284:34 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\menu\menu_detail_sheet.dart:284:48 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_screen.dart:122:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_screen.dart:132:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_screen.dart:135:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_screen.dart:139:55 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_screen.dart:166:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_screen.dart:300:39 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_screen.dart:300:43 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_screen.dart:306:43 - deprecated_member_use
+  error - The getter 'bodyMedium' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\menu\menu_screen.dart:324:40 - undefined_getter
+  error - The getter 'bodyMedium' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\menu\menu_screen.dart:364:52 - undefined_getter
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_screen.dart:418:33 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\menu\menu_screen.dart:418:37 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\menu\menu_screen.dart:426:34 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\order\order_history_screen.dart:115:37 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_history_screen.dart:188:41 - deprecated_member_use
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\order\order_history_screen.dart:233:56 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_history_screen.dart:252:46 - deprecated_member_use
+  error - The getter 'accent' isn't defined for the type 'AppColors' - lib\presentation\screens\order\order_history_screen.dart:267:40 - undefined_getter
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\order\order_history_screen.dart:274:46 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:277:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:304:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:305:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:320:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:326:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:331:45 - deprecated_member_use
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\order\order_status_screen.dart:388:46 - undefined_getter
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\order\order_status_screen.dart:418:33 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\order\order_status_screen.dart:418:37 - unnecessary_underscores
+  error - The getter 'bodyMedium' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\order\order_status_screen.dart:434:44 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order\order_status_screen.dart:447:41 - deprecated_member_use
+   info - The variable name '_TotalRow' isn't a lowerCamelCase identifier - lib\presentation\screens\order\order_status_screen.dart:464:8 - non_constant_identifier_names
+warning - Unused import: '../../../data/models/user_model.dart' - lib\presentation\screens\profile\edit_profile_screen.dart:6:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\edit_profile_screen.dart:72:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\edit_profile_screen.dart:93:50 - deprecated_member_use
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\profile\edit_profile_screen.dart:123:52 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\edit_profile_screen.dart:145:44 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\profile\edit_profile_screen.dart:247:39 - invalid_constant
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\profile\edit_profile_screen.dart:247:49 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\profile_screen.dart:59:59 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\profile\profile_screen.dart:62:57 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\profile_screen.dart:81:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\profile_screen.dart:87:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\profile\profile_screen.dart:90:56 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\screens\profile\profile_screen.dart:219:24 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\profile\profile_screen.dart:219:38 - undefined_getter
+  error - Invalid constant value - lib\presentation\screens\profile\profile_screen.dart:233:24 - invalid_constant
+  error - The getter 'labelSmall' isn't defined for the type 'AppTextStyles' - lib\presentation\screens\profile\profile_screen.dart:233:38 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:90:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:103:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:118:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:145:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:148:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:206:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\splash_screen.dart:228:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:31:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:33:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:43:47 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\voucher\voucher_screen.dart:54:37 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:100:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:112:48 - deprecated_member_use
+  error - The getter 'secondary' isn't defined for the type 'AppColors' - lib\presentation\screens\voucher\voucher_screen.dart:129:50 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:139:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:201:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:206:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\voucher\voucher_screen.dart:224:58 - deprecated_member_use
+
