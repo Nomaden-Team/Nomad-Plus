@@ -2,6 +2,7 @@ enum VoucherType { percent, fixed, freeItem, birthday }
 
 class VoucherModel {
   final String id;
+  final String branchId;
   final String code;
   final String name;
   final VoucherType type;
@@ -17,6 +18,7 @@ class VoucherModel {
 
   const VoucherModel({
     required this.id,
+    required this.branchId,
     required this.code,
     required this.name,
     required this.type,
@@ -34,6 +36,7 @@ class VoucherModel {
   factory VoucherModel.fromMap(Map<String, dynamic> map) {
     return VoucherModel(
       id: (map['id'] ?? '').toString(),
+      branchId: (map['branch_id'] ?? '').toString(),
       code: (map['code'] ?? '').toString(),
       name: (map['name'] ?? '').toString(),
       type: _parseVoucherType(map['type']),
@@ -55,7 +58,7 @@ class VoucherModel {
         value: map['expiry_date'],
         fieldLabel: 'tanggal berakhir voucher',
       ),
-      isActive: map['is_active'] ?? true,
+      isActive: _toBool(map['is_active']),
     );
   }
 
@@ -82,6 +85,18 @@ class VoucherModel {
     if (value is int) return value;
     if (value is double) return value.toInt();
     return int.tryParse(value?.toString() ?? '0') ?? 0;
+  }
+
+  static bool _toBool(dynamic value) {
+    if (value is bool) return value;
+
+    final raw = value?.toString().trim().toLowerCase();
+
+    if (raw == null || raw.isEmpty) return true;
+    if (raw == 'true' || raw == '1') return true;
+    if (raw == 'false' || raw == '0') return false;
+
+    return true;
   }
 
   static DateTime _parseDate({
@@ -112,13 +127,13 @@ class VoucherModel {
       case VoucherType.percent:
         final rawDiscount = ((subtotal * discountValue) / 100).floor();
         if (maxDiscount != null) {
-          return rawDiscount.clamp(0, maxDiscount!);
+          return rawDiscount.clamp(0, maxDiscount!).toInt();
         }
-        return rawDiscount;
+        return rawDiscount.clamp(0, subtotal).toInt();
 
       case VoucherType.fixed:
       case VoucherType.birthday:
-        return discountValue.clamp(0, subtotal);
+        return discountValue.clamp(0, subtotal).toInt();
 
       case VoucherType.freeItem:
         return 0;
@@ -141,7 +156,9 @@ class VoucherModel {
 
     if (!isActive) return 'Voucher ini sedang tidak tersedia';
     if (now.isBefore(startDate)) return 'Voucher ini belum bisa digunakan';
-    if (now.isAfter(expiryDate)) return 'Masa berlaku voucher ini sudah berakhir';
+    if (now.isAfter(expiryDate)) {
+      return 'Masa berlaku voucher ini sudah berakhir';
+    }
     if (usageLimit != null && usedCount >= usageLimit!) {
       return 'Voucher ini sudah habis';
     }
@@ -171,11 +188,16 @@ class VoucherModel {
   static String _currency(int value) {
     final s = value.toString();
     final buffer = StringBuffer();
+
     for (int i = 0; i < s.length; i++) {
       final pos = s.length - i;
       buffer.write(s[i]);
-      if (pos > 1 && pos % 3 == 1) buffer.write('.');
+
+      if (pos > 1 && pos % 3 == 1) {
+        buffer.write('.');
+      }
     }
+
     return 'Rp $buffer';
   }
 }

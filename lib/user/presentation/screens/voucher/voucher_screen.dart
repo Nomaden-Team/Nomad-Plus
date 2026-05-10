@@ -56,6 +56,8 @@ class VoucherScreen extends StatelessWidget {
                       child: RefreshIndicator(
                         color: AppColors.secondary,
                         onRefresh: () async {
+                          await controller.loadVouchers();
+
                           if (Get.isRegistered<OrderController>()) {
                             await Get.find<OrderController>()
                                 .refreshCurrentUserData();

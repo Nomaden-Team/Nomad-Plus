@@ -85,11 +85,15 @@ class AdminOrderScreen extends GetView<AdminOrderController> {
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _OrderSummaryHero(
-              selectedStatus: controller.selectedStatus.value,
-              totalCount: controller.orders.length,
-              subtitle: 'Pantau pesanan yang sedang berjalan',
-            ),
+            child: Obx(() {
+              return _OrderSummaryHero(
+                selectedStatus: controller.selectedStatus.value,
+                totalCount: controller.orders.length,
+                subtitle: controller.selectedStatus.value == 'menunggu'
+                    ? 'Pesanan yang menunggu konfirmasi pembayaran'
+                    : 'Pantau pesanan yang sedang berjalan',
+              );
+            }),
           ),
           const SizedBox(height: 18),
           _buildStatusTabs(),
@@ -117,11 +121,15 @@ class AdminOrderScreen extends GetView<AdminOrderController> {
                 return const _EmptyOrderState();
               }
 
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
-                itemCount: orders.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 14),
-                itemBuilder: (context, index) {
+              return RefreshIndicator(
+                color: AppColors.secondary,
+                onRefresh: controller.fetchOrders,
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                  itemCount: orders.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
                   final order = orders[index];
 
                   final userData =
@@ -192,6 +200,7 @@ class AdminOrderScreen extends GetView<AdminOrderController> {
                     ),
                   );
                 },
+              ),
               );
             }),
           ),
@@ -681,124 +690,6 @@ class _EmptyOrderState extends StatelessWidget {
   }
 }
 
-class _AdminBottomBar extends StatelessWidget {
-  final VoidCallback onTapDashboard;
-  final VoidCallback onTapOrders;
-  final VoidCallback onTapMenus;
-  final VoidCallback onTapBranches;
-
-  const _AdminBottomBar({
-    required this.onTapDashboard,
-    required this.onTapOrders,
-    required this.onTapMenus,
-    required this.onTapBranches,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF0E7E2))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _BottomItem(
-            label: 'DASHBOARD',
-            icon: Icons.grid_view_rounded,
-            onTap: onTapDashboard,
-          ),
-          _BottomItem(
-            label: 'ORDERS',
-            icon: Icons.receipt_long_rounded,
-            active: true,
-            onTap: onTapOrders,
-          ),
-          _BottomItem(
-            label: 'MENUS',
-            icon: Icons.restaurant_rounded,
-            onTap: onTapMenus,
-          ),
-          _BottomItem(
-            label: 'BRANCHES',
-            icon: Icons.storefront_rounded,
-            onTap: onTapBranches,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _BottomItem({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.active = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (active) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 21),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: AppTextStyles.captionBold.copyWith(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.textSecondary, size: 21),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTextStyles.captionBold.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _StatusStyle {
   final String label;

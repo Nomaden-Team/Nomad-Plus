@@ -14,6 +14,8 @@ class VoucherController extends GetxController {
   final VoucherRepository _repository = VoucherRepository(VoucherRemote());
 
   final vouchers = <VoucherModel>[].obs;
+  final userUsageByVoucherId = <String, int>{}.obs;
+
   final isLoading = false.obs;
 
   final appliedVoucher = Rxn<VoucherModel>();
@@ -22,10 +24,50 @@ class VoucherController extends GetxController {
   final infoMessage = ''.obs;
   final emptyMessage = ''.obs;
 
+  bool _lastLoginState = false;
+  String? _lastBranchId;
+
   @override
   void onInit() {
     super.onInit();
+
+    _lastLoginState = _appState.isLoggedIn;
+    _lastBranchId = _appState.selectedBranchId;
+
+    _appState.addListener(_handleAppStateChanged);
+
     loadVouchers();
+  }
+
+  void _handleAppStateChanged() {
+    final isLoggedIn = _appState.isLoggedIn;
+    final currentBranchId = _appState.selectedBranchId;
+
+    if (!isLoggedIn && _lastLoginState) {
+      _lastLoginState = false;
+      _lastBranchId = null;
+
+      vouchers.clear();
+      userUsageByVoucherId.clear();
+      clearAppliedVoucher();
+
+      return;
+    }
+
+    if (isLoggedIn && !_lastLoginState) {
+      _lastLoginState = true;
+      _lastBranchId = currentBranchId;
+
+      loadVouchers();
+      return;
+    }
+
+    if (isLoggedIn && currentBranchId != _lastBranchId) {
+      _lastBranchId = currentBranchId;
+
+      clearAppliedVoucher();
+      loadVouchers();
+    }
   }
 
   Future<void> loadVouchers() async {
@@ -34,33 +76,76 @@ class VoucherController extends GetxController {
       infoMessage.value = '';
       emptyMessage.value = '';
 
-      final list = await _repository.fetchAllVouchers();
+      if (!_appState.isLoggedIn) {
+        vouchers.clear();
+        userUsageByVoucherId.clear();
+        emptyMessage.value = 'Login diperlukan untuk melihat voucher.';
+        return;
+      }
+
+      final branchId = _appState.selectedBranchId?.trim() ?? '';
+
+      if (branchId.isEmpty) {
+        vouchers.clear();
+        emptyMessage.value = 'Pilih cabang terlebih dahulu untuk melihat voucher.';
+        return;
+      }
+
+      await refreshUserVoucherUsages();
+
+      final list = await _repository.fetchAllVouchers(branchId: branchId);
       vouchers.assignAll(list);
 
       if (list.isEmpty) {
-        emptyMessage.value = 'Saat ini belum ada voucher yang siap digunakan.';
+        emptyMessage.value = 'Saat ini belum ada voucher untuk cabang ini.';
       }
-    } catch (_) {
+    } catch (e) {
       vouchers.clear();
       infoMessage.value =
           'Daftar voucher belum bisa ditampilkan sekarang. Coba buka lagi beberapa saat.';
+      Get.log('loadVouchers error: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  // PERBAIKAN: Fungsi ini sekarang memanggil repository dengan benar
+  Future<void> refreshUserVoucherUsages() async {
+    if (!_appState.isLoggedIn) {
+      userUsageByVoucherId.clear();
+      return;
+    }
+
+    try {
+      final usageMap = await _repository.getUserUsageCountMapByVoucherId(
+        _appState.user.id,
+      );
+
+      userUsageByVoucherId.assignAll(usageMap);
+    } catch (e) {
+      Get.log('refreshUserVoucherUsages error: $e');
+    }
+  }
+
   Future<void> incrementVoucherUsage(String code) async {
     try {
-      // Kita cari ID voucher berdasarkan kodenya terlebih dahulu
-      final voucherData = await _repository.validateVoucher(code);
-      if (voucherData != null) {
-        final voucherId = voucherData['id'].toString();
-        
-        // Panggil fungsi increment di remote melalui repository
-        // Pastikan di VoucherRemote sudah ada fungsi incrementVoucherUsedCount
-        await _repository.remote.incrementVoucherUsedCount(voucherId);
+      final branchId = _appState.selectedBranchId?.trim() ?? '';
+
+      if (branchId.isEmpty) {
+        Get.log('Gagal update kuota voucher: cabang belum dipilih');
+        return;
       }
+
+      final voucherData = await _repository.validateVoucher(
+        code,
+        branchId: branchId,
+      );
+
+      if (voucherData == null) return;
+
+      final voucherId = voucherData['id'].toString();
+
+      await _repository.remote.incrementVoucherUsedCount(voucherId);
+      await loadVouchers();
     } catch (e) {
       Get.log('Gagal update kuota voucher: $e');
     }
@@ -73,6 +158,16 @@ class VoucherController extends GetxController {
       return 'Masukkan kode voucher terlebih dahulu';
     }
 
+    if (!_appState.isLoggedIn) {
+      return 'Kamu harus login dulu untuk memakai voucher';
+    }
+
+    final branchId = _appState.selectedBranchId?.trim() ?? '';
+
+    if (branchId.isEmpty) {
+      return 'Pilih cabang terlebih dahulu untuk memakai voucher';
+    }
+
     if (_appState.checkoutPointsToUse > 0) {
       return 'Poin sedang digunakan. Matikan dulu poin untuk memakai voucher';
     }
@@ -82,17 +177,27 @@ class VoucherController extends GetxController {
     }
 
     try {
-      final data = await _repository.validateVoucher(normalized);
+      final data = await _repository.validateVoucher(
+        normalized,
+        branchId: branchId,
+      );
 
       if (data == null) {
-        return 'Kode voucher tidak ditemukan';
+        return 'Voucher tidak tersedia untuk cabang ini';
       }
 
       final voucher = VoucherModel.fromMap(data);
 
+      final userUsageCount = await _repository.getUserUsageCount(
+        voucherId: voucher.id,
+        userId: _appState.user.id,
+      );
+
+      userUsageByVoucherId[voucher.id] = userUsageCount;
+
       final validationMessage = voucher.validate(
         _cart.subtotal,
-        _appState.getUserVoucherUsageCount(voucher.code),
+        userUsageCount,
       );
 
       if (validationMessage != null) {
@@ -113,27 +218,44 @@ class VoucherController extends GetxController {
       return _mapVoucherDbMessage(e);
     } on FormatException catch (e) {
       return e.message;
-    } catch (_) {
+    } catch (e) {
+      Get.log('applyVoucher error: $e');
       return 'Voucher belum bisa diproses sekarang. Coba lagi sebentar lagi';
     }
   }
 
-  // Fungsi untuk menyelesaikan penggunaan voucher saat checkout berhasil
-  Future<void> finalizeVoucherUsage(String orderId) async {
-    if (appliedVoucher.value == null) return;
+  Future<String?> validateAppliedVoucherForCheckout() async {
+    final voucher = appliedVoucher.value;
+
+    if (voucher == null) return null;
+
+    final message = await applyVoucher(voucher.code);
+
+    if (message != null) {
+      clearAppliedVoucher();
+    }
+
+    return message;
+  }
+
+  Future<bool> finalizeVoucherUsage(String orderId) async {
+    final voucher = appliedVoucher.value;
+
+    if (voucher == null) return true;
 
     try {
-      // 1. Catat riwayat penggunaan & Increment used_count di DB
       await _repository.markVoucherAsUsed(
-        voucherId: appliedVoucher.value!.id,
+        voucherId: voucher.id,
         userId: _appState.user.id,
         orderId: orderId,
       );
-      
-      // 2. Refresh list voucher agar UI update kuota terbaru
+
       await loadVouchers();
+
+      return true;
     } catch (e) {
       Get.log('Error finalizeVoucherUsage: $e');
+      return false;
     }
   }
 
@@ -142,24 +264,37 @@ class VoucherController extends GetxController {
     discountAmount.value = 0;
   }
 
-  List<VoucherModel> get activeVouchers =>
-      vouchers.where((v) => v.isValid).toList();
+  int getUserUsageCount(VoucherModel voucher) {
+    return userUsageByVoucherId[voucher.id] ?? 0;
+  }
 
-  List<VoucherModel> get expiredVouchers =>
-      vouchers.where((v) => !v.isValid).toList();
+  List<VoucherModel> get activeVouchers {
+    return vouchers.where((v) => v.isValid).toList();
+  }
+
+  List<VoucherModel> get expiredVouchers {
+    return vouchers.where((v) => !v.isValid).toList();
+  }
 
   bool isUsedByCurrentUser(VoucherModel voucher) {
-    return _appState.getUserVoucherUsageCount(voucher.code) >=
-        voucher.usagePerUser;
+    return getUserUsageCount(voucher) >= voucher.usagePerUser;
   }
 
   String _mapVoucherDbMessage(PostgrestException e) {
     if (e.code == '42703') {
       return 'Pengaturan voucher belum lengkap, jadi belum bisa dipakai';
     }
+
     if (e.code == '42501') {
       return 'Akses voucher sedang dibatasi. Coba lagi beberapa saat';
     }
+
     return 'Voucher belum bisa diproses sekarang. Coba lagi beberapa saat';
+  }
+
+  @override
+  void onClose() {
+    _appState.removeListener(_handleAppStateChanged);
+    super.onClose();
   }
 }

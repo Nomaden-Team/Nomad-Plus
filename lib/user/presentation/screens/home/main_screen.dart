@@ -20,7 +20,7 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final MainController mainCtrl = Get.isRegistered<MainController>()
         ? Get.find<MainController>()
-        : Get.put(MainController(), permanent: true);
+        : Get.put(MainController());
 
     final screens = const [
       HomeScreen(),

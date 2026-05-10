@@ -770,15 +770,24 @@ class OrderController extends GetxController {
       isLoading = true;
       update();
 
+      final isUsingVoucher =
+          appliedVoucherCode != null && appliedVoucherCode!.trim().isNotEmpty;
+
+      if (isUsingVoucher) {
+        final voucherValidationMessage = await voucherController
+            .validateAppliedVoucherForCheckout();
+
+        if (voucherValidationMessage != null) {
+          return voucherValidationMessage;
+        }
+      }
+
       final branch = appState.selectedBranch!;
       final queue = await _generateSimpleQueue(branch.id);
 
       final subtotal = subtotalPreview;
       final discount = voucherDiscountPreview;
       final grandTotal = grandTotalPreview;
-
-      final isUsingVoucher =
-          appliedVoucherCode != null && appliedVoucherCode!.trim().isNotEmpty;
 
       final isUsingPoints = pointsToUse > 0;
 
@@ -809,12 +818,16 @@ class OrderController extends GetxController {
 
       final saved = await orderRepo.createOrder(order);
 
-      // Jangan clear cart / ubah isCheckoutMode di sini.
-      // Tujuannya agar popup QR tetap muncul di atas halaman checkout/cart.
-
       if (isUsingVoucher) {
-        await voucherController.finalizeVoucherUsage(saved.id);
-        appState.markVoucherUsed(appliedVoucherCode!);
+        final usageSaved = await voucherController.finalizeVoucherUsage(
+          saved.id,
+        );
+
+        if (!usageSaved) {
+          Get.log(
+            'Voucher usage belum berhasil disimpan untuk order ${saved.id}',
+          );
+        }
       }
 
       currentOrder = saved;

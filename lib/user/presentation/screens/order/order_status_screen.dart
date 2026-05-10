@@ -204,22 +204,28 @@ class _CheckoutMode extends StatelessWidget {
 
   Future<void> _showPaymentSuccessDialog(OrderModel order) async {
     await Get.dialog(
-      barrierDismissible: false,
-      Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: _CheckoutQrDialog(
-          order: order,
-          onTrackOrder: () {
-            Get.back();
-            controller.finishCheckoutAndOpenOrder(order);
-          },
-          onBackHome: () {
-            Get.back();
-            controller.finishCheckoutAndGoHome();
-          },
+      PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          child: _CheckoutQrDialog(
+            order: order,
+            onTrackOrder: () {
+              Get.back();
+              controller.finishCheckoutAndOpenOrder(order);
+            },
+            onBackHome: () {
+              Get.back();
+              controller.finishCheckoutAndGoHome();
+            },
+          ),
         ),
       ),
+      barrierDismissible: false,
     );
   }
 
@@ -321,6 +327,8 @@ class _CheckoutMode extends StatelessWidget {
           child: RefreshIndicator(
             color: AppColors.secondary,
             onRefresh: () async {
+              await voucherController.loadVouchers();
+
               controller.refreshCheckout();
 
               if (Get.isRegistered<OrderController>()) {

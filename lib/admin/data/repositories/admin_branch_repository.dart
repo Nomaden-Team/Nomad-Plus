@@ -18,5 +18,4 @@ class AdminBranchRepository {
     required Map<String, dynamic> payload,
   }) => remote.saveBranch(branchId: branchId, payload: payload);
 
-  Future<void> deleteBranch(String branchId) => remote.deleteBranch(branchId);
 }

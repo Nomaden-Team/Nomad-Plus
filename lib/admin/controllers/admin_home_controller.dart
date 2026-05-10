@@ -1,7 +1,5 @@
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../core/routes/admin_routes.dart';
 import '../data/models/admin_dashboard_model.dart';
 import '../data/repositories/admin_home_repository.dart';
 
@@ -23,29 +21,6 @@ class AdminHomeController extends GetxController {
   final RxInt activeVouchers = 0.obs;
   final RxInt todayRevenue = 0.obs;
   final RxString branchName = ''.obs;
-
-  final adminMenus = const <AdminMenuItem>[
-    AdminMenuItem(
-      title: 'Orders',
-      subtitle: 'Kelola pesanan masuk',
-      route: AdminRoutes.orders,
-    ),
-    AdminMenuItem(
-      title: 'Menus',
-      subtitle: 'Kelola menu & availability',
-      route: AdminRoutes.menus,
-    ),
-    AdminMenuItem(
-      title: 'Branches',
-      subtitle: 'Kelola cabang & jam operasional',
-      route: AdminRoutes.branches,
-    ),
-    AdminMenuItem(
-      title: 'Vouchers',
-      subtitle: 'Kelola voucher & promo',
-      route: AdminRoutes.vouchers,
-    ),
-  ];
 
   @override
   void onInit() {
@@ -115,32 +90,4 @@ class AdminHomeController extends GetxController {
   void openMenu(String route) {
     Get.toNamed(route);
   }
-
-  String formatRupiah(int value) {
-    final str = value.toString();
-    final buffer = StringBuffer();
-    int count = 0;
-
-    for (int i = str.length - 1; i >= 0; i--) {
-      buffer.write(str[i]);
-      count++;
-      if (count % 3 == 0 && i != 0) {
-        buffer.write('.');
-      }
-    }
-
-    return 'Rp${buffer.toString().split('').reversed.join()}';
-  }
-}
-
-class AdminMenuItem {
-  final String title;
-  final String subtitle;
-  final String route;
-
-  const AdminMenuItem({
-    required this.title,
-    required this.subtitle,
-    required this.route,
-  });
 }

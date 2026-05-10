@@ -47,12 +47,5 @@ class AdminBranchRemote {
         .eq('id', adminBranchId);
   }
 
-  Future<void> deleteBranch(String branchId) async {
-    final adminBranchId = await AdminBranchScope.requireBranchId();
-    await _supabase
-        .from('branches')
-        .delete()
-        .eq('id', branchId)
-        .eq('id', adminBranchId);
   }
-}
+

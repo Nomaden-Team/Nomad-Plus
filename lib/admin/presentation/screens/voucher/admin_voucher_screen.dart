@@ -156,7 +156,14 @@ class AdminVoucherScreen extends GetView<AdminVoucherController> {
         }
 
         if (controller.vouchers.isEmpty) {
-          return const _EmptyVoucherState();
+          return RefreshIndicator(
+            color: AppColors.secondary,
+            onRefresh: controller.fetchVouchers,
+            child: const SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              child: _EmptyVoucherState(),
+            ),
+          );
         }
 
         final totalVoucher = controller.vouchers.length;
@@ -165,9 +172,13 @@ class AdminVoucherScreen extends GetView<AdminVoucherController> {
             .length;
         final totalInactive = totalVoucher - totalActive;
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-          children: [
+        return RefreshIndicator(
+          color: AppColors.secondary,
+          onRefresh: controller.fetchVouchers,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            children: [
             _VoucherSummaryCard(
               totalVoucher: totalVoucher,
               totalActive: totalActive,
@@ -223,6 +234,7 @@ class AdminVoucherScreen extends GetView<AdminVoucherController> {
               );
             }),
           ],
+          ),
         );
       }),
     );
@@ -725,121 +737,3 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _AdminBottomBar extends StatelessWidget {
-  final VoidCallback onTapDashboard;
-  final VoidCallback onTapOrders;
-  final VoidCallback onTapMenus;
-  final VoidCallback onTapVouchers;
-
-  const _AdminBottomBar({
-    required this.onTapDashboard,
-    required this.onTapOrders,
-    required this.onTapMenus,
-    required this.onTapVouchers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _BottomItem(
-            label: 'DASHBOARD',
-            icon: Icons.grid_view_rounded,
-            onTap: onTapDashboard,
-          ),
-          _BottomItem(
-            label: 'ORDERS',
-            icon: Icons.receipt_long_rounded,
-            onTap: onTapOrders,
-          ),
-          _BottomItem(
-            label: 'MENUS',
-            icon: Icons.restaurant_rounded,
-            onTap: onTapMenus,
-          ),
-          _BottomItem(
-            label: 'VOUCHERS',
-            icon: Icons.confirmation_number_rounded,
-            active: true,
-            onTap: onTapVouchers,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _BottomItem({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.active = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (active) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 21),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: AppTextStyles.captionBold.copyWith(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.textSecondary, size: 21),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTextStyles.captionBold.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

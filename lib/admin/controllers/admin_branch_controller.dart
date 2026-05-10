@@ -124,17 +124,4 @@ class AdminBranchController extends GetxController {
       isSubmitting.value = false;
     }
   }
-
-  Future<bool> deleteBranch(String branchId) async {
-    try {
-      await repository.deleteBranch(branchId);
-      await fetchBranches();
-      Get.snackbar('Berhasil', 'Cabang berhasil dihapus.');
-      return true;
-    } catch (e) {
-      Get.snackbar('Belum berhasil', 'Cabang belum bisa dihapus.');
-      Get.log('AdminBranchController.deleteBranch error: $e');
-      return false;
-    }
-  }
 }

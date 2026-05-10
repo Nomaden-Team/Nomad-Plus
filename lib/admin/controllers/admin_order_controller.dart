@@ -56,9 +56,6 @@ class AdminOrderController extends GetxController {
     await fetchOrders();
   }
 
-  bool canUpdateOrder(String orderId) {
-    return !isUpdatingStatus.value || updatingOrderId.value == orderId;
-  }
 
   Future<void> updateOrderStatus({
     required String orderId,
@@ -154,22 +151,6 @@ class AdminOrderController extends GetxController {
     }
   }
 
-  String formatPaymentLabel(String paymentMethod) {
-    final value = paymentMethod.trim().toLowerCase();
-
-    switch (value) {
-      case 'cash':
-        return 'Tunai';
-      case 'qris':
-        return 'QRIS';
-      case 'transfer':
-        return 'Transfer';
-      case 'card':
-        return 'Kartu';
-      default:
-        return paymentMethod.isEmpty ? '-' : paymentMethod.toUpperCase();
-    }
-  }
 
   void _showSuccess({
     required String title,

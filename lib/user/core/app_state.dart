@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../controllers/cart/cart_controller.dart';
+import '../controllers/home/main_controller.dart';
 import '../data/models/branch_model.dart';
 import '../data/models/menu_item_model.dart';
 import '../data/models/order_model.dart';
@@ -41,26 +42,31 @@ class AppStateController extends GetxController {
     update();
   }
 
-Future<void> logout() async {
-  try {
-    await Supabase.instance.client.auth.signOut();
-  } catch (e) {
-    Get.log('logout signOut error: $e');
-  } finally {
-    _isLoggedIn = false;
-    _user = null;
-    selectedBranchRx.value = null;
-    _checkoutPointsToUse = 0;
-    _orders.clear();
-    _voucherUsageByCode.clear();
+  Future<void> logout() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      Get.log('logout signOut error: $e');
+    } finally {
+      _isLoggedIn = false;
+      _user = null;
+      selectedBranchRx.value = null;
+      _checkoutPointsToUse = 0;
+      _orders.clear();
+      _voucherUsageByCode.clear();
 
-    if (Get.isRegistered<CartController>()) {
-      _cartController.clearCart();
+      if (Get.isRegistered<CartController>()) {
+        _cartController.clearCart();
+      }
+
+      if (Get.isRegistered<MainController>()) {
+        Get.find<MainController>().changeTab(0);
+      }
+
+      update();
     }
-
-    update();
   }
-}
+
   void setBranch(Branch branch) {
     if (selectedBranchRx.value?.id == branch.id) return;
     selectedBranchRx.value = branch;
@@ -230,7 +236,4 @@ Future<void> logout() async {
     if (subtotal <= 0) return 0;
     return ((subtotal / 5000) * pointMultiplier).floor();
   }
-
-  
 }
-
