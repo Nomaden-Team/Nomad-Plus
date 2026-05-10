@@ -441,9 +441,11 @@ class ProfileScreen extends StatelessWidget {
                             textCancel: 'Batal',
                             confirmTextColor: Colors.white,
                             buttonColor: AppColors.primary,
-                            onConfirm: () {
+                            onConfirm: () async {
                               Get.back();
-                              appState.logout();
+
+                              await appState.logout();
+
                               Get.offAllNamed(AppRoutes.login);
                             },
                           ),

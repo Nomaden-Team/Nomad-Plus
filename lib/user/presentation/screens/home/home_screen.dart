@@ -6,6 +6,7 @@ import '../../../controllers/home/home_controller.dart';
 import '../../../controllers/home/main_controller.dart';
 import '../../../controllers/menu/menu_controller.dart';
 import '../../../controllers/menu/menu_detail_controller.dart';
+import '../../../controllers/order/order_controller.dart';
 import '../../../core/app_state.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/formatters.dart';
@@ -97,154 +98,171 @@ class HomeScreen extends StatelessWidget {
 
         final curatedSlides = _dummyPromoSlides;
 
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: _HomeHeroSection(
-                firstName: firstName,
-                branchName: selectedBranch?.name ?? 'Pilih Cabang',
-                points: points,
-                totalEarned: totalEarned,
-                tier: tier,
-                userId: userId,
-                onBranchTap: () => _showBranchPicker(context, homeCtrl),
-                onMembershipTap: () => Get.find<MainController>().changeTab(2),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 26),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (curatedSlides.isNotEmpty) ...[
-                      const _SectionHeader(
-                        eyebrow: 'WEEKLY PICKS',
-                        title: 'Weekly Curations',
-                      ),
-                      const SizedBox(height: 14),
-                      _WeeklyCurationsSlider(slides: curatedSlides),
-                      const SizedBox(height: 28),
-                    ],
-                    const _SectionHeader(
-                      eyebrow: 'EXPLORE',
-                      title: 'Browse Categories',
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 104,
-                      child: (() {
-                        final filteredCategories = homeCtrl.categories
-                            .where((c) => _isAllowedHomeCategory(c.name))
-                            .toList();
+        return RefreshIndicator(
+          color: AppColors.secondary,
+          onRefresh: () async {
+            await homeCtrl.loadHomeData();
 
-                        if (filteredCategories.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'Kategori belum tersedia',
-                              style: TextStyle(color: AppColors.textSecondary),
-                            ),
-                          );
-                        }
-
-                        return ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: filteredCategories.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 14),
-                          itemBuilder: (context, index) {
-                            final category = filteredCategories[index];
-                            return _CategoryButton(
-                              label: category.name,
-                              icon: homeCtrl.iconForCategory(category.name),
-                              onTap: () async {
-                                await homeCtrl.selectCategory(category.id);
-
-                                final mainCtrl = Get.find<MainController>();
-                                final menuCtrl = Get.find<MenuController>();
-
-                                menuCtrl.selectedType.value = category.id;
-                                mainCtrl.changeTab(1);
-                              },
-                            );
-                          },
-                        );
-                      })(),
-                    ),
-                    const SizedBox(height: 28),
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: _SectionHeader(
-                            eyebrow: 'FEATURED MENU',
-                            title: 'Popular Nomads',
-                          ),
-                        ),
-                        if (homeCtrl.isRefreshingMenus.value)
-                          const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        else
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceSoft,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.cardBorder),
-                            ),
-                            child: const Text(
-                              'FILTER',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.secondary,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (selectedBranch == null)
-                      const _InfoCard(message: 'Belum ada cabang yang dipilih.')
-                    else if (homeCtrl.featuredMenus.isEmpty)
-                      _InfoCard(
-                        message: homeCtrl.errorMessage.value.isNotEmpty
-                            ? homeCtrl.errorMessage.value
-                            : 'Menu unggulan belum tersedia.',
-                      )
-                    else
-                      GridView.builder(
-                        itemCount: homeCtrl.featuredMenus.length,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisExtent: 254,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                            ),
-                        itemBuilder: (context, index) {
-                          final item = homeCtrl.featuredMenus[index];
-                          return _MenuCard(
-                            item: item,
-                            qty: homeCtrl.qtyForMenu(item.id),
-                            cartCtrl: cartCtrl,
-                          );
-                        },
-                      ),
-                    const SizedBox(height: 22),
-                  ],
+            if (Get.isRegistered<OrderController>()) {
+              await Get.find<OrderController>().refreshCurrentUserData();
+              await Get.find<OrderController>().refreshOrdersAndCurrentOrder();
+            }
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _HomeHeroSection(
+                  firstName: firstName,
+                  branchName: selectedBranch?.name ?? 'Pilih Cabang',
+                  points: points,
+                  totalEarned: totalEarned,
+                  tier: tier,
+                  userId: userId,
+                  onBranchTap: () => _showBranchPicker(context, homeCtrl),
+                  onMembershipTap: () =>
+                      Get.find<MainController>().changeTab(2),
                 ),
               ),
-            ),
-          ],
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 26),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (curatedSlides.isNotEmpty) ...[
+                        const _SectionHeader(
+                          eyebrow: 'WEEKLY PICKS',
+                          title: 'Weekly Curations',
+                        ),
+                        const SizedBox(height: 14),
+                        _WeeklyCurationsSlider(slides: curatedSlides),
+                        const SizedBox(height: 28),
+                      ],
+                      const _SectionHeader(
+                        eyebrow: 'EXPLORE',
+                        title: 'Browse Categories',
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        height: 104,
+                        child: (() {
+                          final filteredCategories = homeCtrl.categories
+                              .where((c) => _isAllowedHomeCategory(c.name))
+                              .toList();
+
+                          if (filteredCategories.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'Kategori belum tersedia',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: filteredCategories.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 14),
+                            itemBuilder: (context, index) {
+                              final category = filteredCategories[index];
+                              return _CategoryButton(
+                                label: category.name,
+                                icon: homeCtrl.iconForCategory(category.name),
+                                onTap: () async {
+                                  await homeCtrl.selectCategory(category.id);
+
+                                  final mainCtrl = Get.find<MainController>();
+                                  final menuCtrl = Get.find<MenuController>();
+
+                                  menuCtrl.selectedType.value = category.id;
+                                  mainCtrl.changeTab(1);
+                                },
+                              );
+                            },
+                          );
+                        })(),
+                      ),
+                      const SizedBox(height: 28),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: _SectionHeader(
+                              eyebrow: 'FEATURED MENU',
+                              title: 'Popular Nomads',
+                            ),
+                          ),
+                          if (homeCtrl.isRefreshingMenus.value)
+                            const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceSoft,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.cardBorder),
+                              ),
+                              child: const Text(
+                                'FILTER',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (selectedBranch == null)
+                        const _InfoCard(
+                          message: 'Belum ada cabang yang dipilih.',
+                        )
+                      else if (homeCtrl.featuredMenus.isEmpty)
+                        _InfoCard(
+                          message: homeCtrl.errorMessage.value.isNotEmpty
+                              ? homeCtrl.errorMessage.value
+                              : 'Menu unggulan belum tersedia.',
+                        )
+                      else
+                        GridView.builder(
+                          itemCount: homeCtrl.featuredMenus.length,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisExtent: 254,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                              ),
+                          itemBuilder: (context, index) {
+                            final item = homeCtrl.featuredMenus[index];
+                            return _MenuCard(
+                              item: item,
+                              qty: homeCtrl.qtyForMenu(item.id),
+                              cartCtrl: cartCtrl,
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 22),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       }),
     );

@@ -18,7 +18,6 @@ class AdminBranchController extends GetxController {
   final closeTimeCtrl = TextEditingController();
 
   final RxBool isOpen = true.obs;
-
   @override
   void onInit() {
     super.onInit();

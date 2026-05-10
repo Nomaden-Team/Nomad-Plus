@@ -18,6 +18,7 @@ class OrderRemote {
       'branch_id': order.branchId,
       'queue_number': order.queueNumber,
       'status': _toDbStatus(order.status),
+      'payment_method': order.paymentMethod,
       'subtotal': order.subtotal,
       'discount_amount': order.discountAmount,
       'service_fee': order.serviceFee,

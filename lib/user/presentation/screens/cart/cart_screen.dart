@@ -55,50 +55,65 @@ class CartScreen extends StatelessWidget {
               : Column(
                   children: [
                     Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
-                        children: [
-                          _StoreCard(
-                            branchName:
-                                appState.selectedBranch?.name ??
-                                'Cabang belum dipilih',
-                            address: appState.selectedBranch?.address ?? '',
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Pilihan Kamu',
-                                style: AppTextStyles.heading1.copyWith(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
+                      child: RefreshIndicator(
+                        color: AppColors.secondary,
+                        onRefresh: () async {
+                          cart.update();
+
+                          if (Get.isRegistered<OrderController>()) {
+                            Get.find<OrderController>().refreshCheckout();
+                            await Get.find<OrderController>()
+                                .refreshCurrentUserData();
+                          }
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+                          children: [
+                            _StoreCard(
+                              branchName:
+                                  appState.selectedBranch?.name ??
+                                  'Cabang belum dipilih',
+                              address: appState.selectedBranch?.address ?? '',
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Pilihan Kamu',
+                                  style: AppTextStyles.heading1.copyWith(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${cart.totalQty} item',
-                                style: AppTextStyles.bodySecondary.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
+                                Text(
+                                  '${cart.totalQty} item',
+                                  style: AppTextStyles.bodySecondary.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          ...cart.cartItems.map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 14),
-                              child: _CartItemCard(
-                                item: item,
-                                onDecrease: () =>
-                                    cart.decreaseQty(item.entryId),
-                                onIncrease: () =>
-                                    cart.updateQty(item.entryId, item.qty + 1),
-                                onRemove: () => cart.removeItem(item.entryId),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            ...cart.cartItems.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: _CartItemCard(
+                                  item: item,
+                                  onDecrease: () =>
+                                      cart.decreaseQty(item.entryId),
+                                  onIncrease: () => cart.updateQty(
+                                    item.entryId,
+                                    item.qty + 1,
+                                  ),
+                                  onRemove: () => cart.removeItem(item.entryId),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     GetBuilder<OrderController>(

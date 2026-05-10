@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../controllers/order/order_controller.dart';
 import '../../../controllers/voucher/voucher_controller.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -52,54 +53,70 @@ class VoucherScreen extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                        children: [
-                          const _VoucherHeroCard(),
-                          const SizedBox(height: 18),
-                          _SectionHeader(
-                            title: 'Voucher Tersedia',
-                            count: active.length,
-                            isPrimary: true,
-                          ),
-                          const SizedBox(height: 12),
-                          if (active.isEmpty)
-                            const _EmptyVoucherState(
-                              icon: Icons.local_offer_outlined,
-                              title: 'Belum ada voucher aktif',
-                              subtitle:
-                                  'Voucher yang masih berlaku akan muncul di sini.',
-                            )
-                          else
-                            ...active.map(
-                              (voucher) => Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: _VoucherCard(
-                                  voucher: voucher,
-                                  expired: false,
-                                  used: controller.isUsedByCurrentUser(voucher),
-                                ),
-                              ),
-                            ),
-                          if (expired.isNotEmpty) ...[
-                            const SizedBox(height: 10),
+                      child: RefreshIndicator(
+                        color: AppColors.secondary,
+                        onRefresh: () async {
+                          if (Get.isRegistered<OrderController>()) {
+                            await Get.find<OrderController>()
+                                .refreshCurrentUserData();
+                            await Get.find<OrderController>()
+                                .refreshOrdersAndCurrentOrder();
+                          }
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+                          children: [
+                            const _VoucherHeroCard(),
+                            const SizedBox(height: 18),
                             _SectionHeader(
-                              title: 'Sudah Tidak Berlaku',
-                              count: expired.length,
+                              title: 'Voucher Tersedia',
+                              count: active.length,
+                              isPrimary: true,
                             ),
                             const SizedBox(height: 12),
-                            ...expired.map(
-                              (voucher) => Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: _VoucherCard(
-                                  voucher: voucher,
-                                  expired: true,
-                                  used: controller.isUsedByCurrentUser(voucher),
+                            if (active.isEmpty)
+                              const _EmptyVoucherState(
+                                icon: Icons.local_offer_outlined,
+                                title: 'Belum ada voucher aktif',
+                                subtitle:
+                                    'Voucher yang masih berlaku akan muncul di sini.',
+                              )
+                            else
+                              ...active.map(
+                                (voucher) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: _VoucherCard(
+                                    voucher: voucher,
+                                    expired: false,
+                                    used: controller.isUsedByCurrentUser(
+                                      voucher,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                            if (expired.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              _SectionHeader(
+                                title: 'Sudah Tidak Berlaku',
+                                count: expired.length,
+                              ),
+                              const SizedBox(height: 12),
+                              ...expired.map(
+                                (voucher) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: _VoucherCard(
+                                    voucher: voucher,
+                                    expired: true,
+                                    used: controller.isUsedByCurrentUser(
+                                      voucher,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -472,7 +489,7 @@ class _VoucherCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    voucher.typeLabel,  
+                    voucher.typeLabel,
                     style: AppTextStyles.bodySecondary.copyWith(
                       fontSize: 13,
                       height: 1.45,

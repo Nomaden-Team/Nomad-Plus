@@ -1,4 +1,8 @@
+import 'package:flutter/widgets.dart' show RouteSettings;
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../app_state.dart';
 
 import '../../controllers/auth/login_controller.dart';
 import '../../controllers/auth/register_controller.dart';
@@ -7,6 +11,7 @@ import '../../controllers/home/home_controller.dart';
 import '../../controllers/home/main_controller.dart';
 import '../../controllers/loyalty/loyalty_controller.dart';
 import '../../controllers/menu/menu_controller.dart';
+import '../../controllers/order/order_controller.dart';
 import '../../controllers/profile/profile_controller.dart';
 import '../../controllers/splash/splash_controller.dart';
 import '../../controllers/voucher/voucher_controller.dart';
@@ -38,6 +43,7 @@ class AppPages {
         }
       }),
     ),
+
     GetPage(
       name: AppRoutes.login,
       page: () => const LoginScreen(),
@@ -47,6 +53,7 @@ class AppPages {
         }
       }),
     ),
+
     GetPage(
       name: AppRoutes.register,
       page: () => const RegisterScreen(),
@@ -56,56 +63,143 @@ class AppPages {
         }
       }),
     ),
+
     GetPage(
       name: AppRoutes.home,
       page: () => const MainScreen(),
+      middlewares: [_AuthGuardMiddleware()],
       binding: BindingsBuilder(() {
         if (!Get.isRegistered<CartController>()) {
-          Get.put(CartController());
+          Get.put(CartController(), permanent: true);
         }
+
         if (!Get.isRegistered<MainController>()) {
           Get.put(MainController());
         }
+
         if (!Get.isRegistered<MenuController>()) {
           Get.put(MenuController());
         }
+
         if (!Get.isRegistered<HomeController>()) {
           Get.put(HomeController());
         }
+
+        // Wajib permanent agar realtime order, sync poin,
+        // dan popup reward bisa aktif di page mana pun.
+        if (!Get.isRegistered<OrderController>()) {
+          Get.put(OrderController(), permanent: true);
+        }
       }),
     ),
-    GetPage(name: AppRoutes.cart, page: () => const CartScreen()),
-    GetPage(name: AppRoutes.orderStatus, page: () => const OrderStatusScreen()),
+
+    GetPage(
+      name: AppRoutes.cart,
+      page: () => const CartScreen(),
+      middlewares: [_AuthGuardMiddleware()],
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<CartController>()) {
+          Get.put(CartController(), permanent: true);
+        }
+
+        if (!Get.isRegistered<OrderController>()) {
+          Get.put(OrderController(), permanent: true);
+        }
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.orderStatus,
+      page: () => const OrderStatusScreen(),
+      middlewares: [_AuthGuardMiddleware()],
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<CartController>()) {
+          Get.put(CartController(), permanent: true);
+        }
+
+        if (!Get.isRegistered<OrderController>()) {
+          Get.put(OrderController(), permanent: true);
+        }
+      }),
+    ),
+
     GetPage(
       name: AppRoutes.editProfile,
       page: () => const EditProfileScreen(),
+      middlewares: [_AuthGuardMiddleware()],
       binding: BindingsBuilder(() {
         if (!Get.isRegistered<ProfileController>()) {
           Get.put(ProfileController());
         }
       }),
     ),
+
     GetPage(
       name: AppRoutes.loyalty,
       page: () => const LoyaltyScreen(),
+      middlewares: [_AuthGuardMiddleware()],
       binding: BindingsBuilder(() {
         if (!Get.isRegistered<LoyaltyController>()) {
           Get.put(LoyaltyController());
         }
+
+        if (!Get.isRegistered<OrderController>()) {
+          Get.put(OrderController(), permanent: true);
+        }
       }),
     ),
+
     GetPage(
       name: AppRoutes.voucher,
       page: () => const VoucherScreen(),
+      middlewares: [_AuthGuardMiddleware()],
       binding: BindingsBuilder(() {
         if (!Get.isRegistered<VoucherController>()) {
           Get.put(VoucherController());
         }
+
+        if (!Get.isRegistered<OrderController>()) {
+          Get.put(OrderController(), permanent: true);
+        }
       }),
     ),
+
     GetPage(
       name: AppRoutes.orderHistory,
       page: () => const OrderHistoryScreen(),
+      middlewares: [_AuthGuardMiddleware()],
+      binding: BindingsBuilder(() {
+        if (!Get.isRegistered<OrderController>()) {
+          Get.put(OrderController(), permanent: true);
+        }
+      }),
     ),
   ];
+}
+
+class _AuthGuardMiddleware extends GetMiddleware {
+  @override
+  int? priority = 1;
+
+  @override
+  RouteSettings? redirect(String? route) {
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (Get.isRegistered<AppStateController>()) {
+      final appState = Get.find<AppStateController>();
+
+      if (appState.isLoggedIn) {
+        return null;
+      }
+    }
+
+    if (session?.user != null) {
+      return RouteSettings(
+        name: AppRoutes.splash,
+        arguments: {'redirect': AppRoutes.home},
+      );
+    }
+
+    return const RouteSettings(name: AppRoutes.login);
+  }
 }

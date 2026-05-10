@@ -26,7 +26,6 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  // Inisialisasi Controller (Gunakan permanent: true agar tidak hilang dari memory)
   if (!Get.isRegistered<CartController>())
     Get.put<CartController>(CartController(), permanent: true);
   if (!Get.isRegistered<AppStateController>())

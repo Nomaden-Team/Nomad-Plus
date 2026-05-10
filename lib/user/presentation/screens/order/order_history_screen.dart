@@ -52,35 +52,86 @@ class _OrderHistoryContent extends StatefulWidget {
 
 class _OrderHistoryContentState extends State<_OrderHistoryContent> {
   int selectedTab = 0;
-
   List<OrderModel> get filteredOrders {
     switch (selectedTab) {
       case 1:
-        return widget.orders.where((o) => o.status.isActive).toList();
+        final processingOrders = widget.orders
+            .where((o) => o.status == OrderStatus.confirmed)
+            .toList();
+
+        processingOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return processingOrders;
       case 2:
-        return widget.orders.where((o) => !o.status.isActive).toList();
+        final completedOrders = widget.orders
+            .where((o) => !o.status.isActive)
+            .toList();
+
+        completedOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return completedOrders;
       default:
-        return widget.orders;
+        return _sortOrdersByStatusFlow(widget.orders);
+    }
+  }
+
+  List<OrderModel> _sortOrdersByStatusFlow(List<OrderModel> orders) {
+    final sortedOrders = List<OrderModel>.from(orders);
+
+    sortedOrders.sort((a, b) {
+      final statusCompare = _statusPriority(
+        a.status,
+      ).compareTo(_statusPriority(b.status));
+
+      if (statusCompare != 0) {
+        return statusCompare;
+      }
+
+      return b.createdAt.compareTo(a.createdAt);
+    });
+
+    return sortedOrders;
+  }
+
+  int _statusPriority(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return 0; // MENUNGGU
+      case OrderStatus.confirmed:
+        return 1; // DIPROSES
+      case OrderStatus.ready:
+        return 2; // SIAP
+      case OrderStatus.done:
+        return 3; // SELESAI
+      case OrderStatus.cancelled:
+        return 4; // DIBATALKAN
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
-      children: [
-        const _HistoryHeader(),
-        const SizedBox(height: 18),
-        _HistoryTabBar(
-          selectedTab: selectedTab,
-          onChanged: (value) => setState(() => selectedTab = value),
-        ),
-        const SizedBox(height: 18),
-        if (filteredOrders.isEmpty)
-          const _FilteredEmptyState()
-        else
-          ...filteredOrders.map((order) => _HistoryCard(order: order)),
-      ],
+    return RefreshIndicator(
+      color: AppColors.secondary,
+      onRefresh: () async {
+        if (Get.isRegistered<OrderController>()) {
+          await Get.find<OrderController>().refreshOrdersAndCurrentOrder();
+        }
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+        children: [
+          const _HistoryHeader(),
+          const SizedBox(height: 18),
+          _HistoryTabBar(
+            selectedTab: selectedTab,
+            onChanged: (value) => setState(() => selectedTab = value),
+          ),
+          const SizedBox(height: 18),
+          if (filteredOrders.isEmpty)
+            const _FilteredEmptyState()
+          else
+            ...filteredOrders.map((order) => _HistoryCard(order: order)),
+        ],
+      ),
     );
   }
 }
@@ -378,30 +429,33 @@ class _HistoryCard extends StatelessWidget {
   final OrderModel order;
 
   const _HistoryCard({required this.order});
-
   Color get _statusColor {
     switch (order.status) {
+      case OrderStatus.pending:
+        return AppColors.warning;
+      case OrderStatus.confirmed:
+        return AppColors.secondary;
+      case OrderStatus.ready:
+        return AppColors.info;
       case OrderStatus.done:
-        return AppColors.teal;
+        return AppColors.success;
       case OrderStatus.cancelled:
         return AppColors.primary;
-      case OrderStatus.pending:
-      case OrderStatus.confirmed:
-      case OrderStatus.ready:
-        return AppColors.warning;
     }
   }
 
   Color get _statusBg {
     switch (order.status) {
+      case OrderStatus.pending:
+        return const Color(0xFFFFF4DE);
+      case OrderStatus.confirmed:
+        return const Color(0xFFE8F5F4);
+      case OrderStatus.ready:
+        return const Color(0xFFEAF3F4);
       case OrderStatus.done:
-        return AppColors.tealLight;
+        return const Color(0xFFEAF7EC);
       case OrderStatus.cancelled:
         return AppColors.primarySoft;
-      case OrderStatus.pending:
-      case OrderStatus.confirmed:
-      case OrderStatus.ready:
-        return const Color(0xFFFFF4DE);
     }
   }
 

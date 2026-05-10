@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../controllers/home/main_controller.dart';
 import '../../../controllers/menu/menu_controller.dart';
 import '../../../controllers/menu/menu_detail_controller.dart';
+import '../../../controllers/order/order_controller.dart';
 import '../../../core/app_state.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -49,177 +50,190 @@ class LoyaltyScreen extends StatelessWidget {
           backgroundColor: AppColors.background,
           body: SafeArea(
             bottom: false,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _CompactLoyaltyHeader(
-                  user: user,
-                  points: points,
-                  tierLabel: tierLabel,
-                  nextTierTitle: progressInfo.title,
-                  nextTierSubtitle: progressInfo.subtitle,
-                  progress: progressInfo.progress,
-                  progressText: progressInfo.progressText,
-                  tierAccent: tierAccent,
-                  onProfileTap: _openProfileTab,
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _QuickInfoCard(
-                              title: 'Poin Aktif',
-                              value: Formatters.commas(points),
-                              subtitle: 'Siap digunakan',
-                              icon: Icons.stars_rounded,
-                              accentColor: AppColors.primary,
-                              softColor: AppColors.primarySoft,
-                              onTap: _showUsePointsInfo,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _QuickInfoCard(
-                              title: 'Membership',
-                              value: tierLabel,
-                              subtitle: 'Level saat ini',
-                              icon: Icons.workspace_premium_rounded,
-                              accentColor: tierAccent,
-                              softColor: tierAccent.withValues(alpha: 0.14),
-                              onTap: () => _showBenefitsInfo(tier),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      const _SectionTitle(
-                        title: 'Info Loyalty',
-                        subtitle:
-                            'Tap tiap kartu untuk melihat informasi lengkap seputar membership, poin, dan rewards.',
-                      ),
-                      const SizedBox(height: 14),
-                      _InfoEntryCard(
-                        icon: Icons.workspace_premium_rounded,
-                        title: 'Benefit Membership',
-                        subtitle:
-                            'Lihat benefit aktif sesuai tier membership kamu.',
-                        iconColor: tierAccent,
-                        onTap: () => _showBenefitsInfo(tier),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _FeatureCard(
-                              icon: Icons.shopping_bag_outlined,
-                              title: 'Cara Mendapatkan',
-                              subtitle:
-                                  'Poin didapat dari transaksi selesai dan mengikuti nominal belanja.',
-                              accentColor: AppColors.secondary,
-                              onTap: _showEarnInfo,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _FeatureCard(
-                              icon: Icons.account_balance_wallet_outlined,
-                              title: 'Cara Menggunakan',
-                              subtitle:
-                                  'Gunakan poin untuk checkout atau tukarkan ke reward tertentu.',
-                              accentColor: AppColors.primary,
-                              onTap: _showUsePointsInfo,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoEntryCard(
-                        icon: Icons.rule_folder_outlined,
-                        title: 'Aturan Penting Loyalty',
-                        subtitle:
-                            'Ringkasan aturan penggunaan poin dan reward.',
-                        iconColor: AppColors.textPrimary,
-                        onTap: _showRulesInfo,
-                      ),
-                      _InfoEntryCard(
-                        icon: Icons.info_outline_rounded,
-                        title: 'Syarat & Ketentuan Poin',
-                        subtitle:
-                            'Masa berlaku, pembatalan transaksi, dan penyalahgunaan program.',
-                        iconColor: AppColors.textSecondary,
-                        onTap: _showTermsInfo,
-                      ),
-                      _InfoEntryCard(
-                        icon: Icons.payments_outlined,
-                        title: 'Aturan Voucher & Poin',
-                        subtitle:
-                            'Kombinasi promo, pembatasan penggunaan, dan alur checkout.',
-                        iconColor: AppColors.textSecondary,
-                        onTap: _showVoucherInfo,
-                      ),
-                      _InfoEntryCard(
-                        icon: Icons.help_outline_rounded,
-                        title: 'Panduan Program Rewards',
-                        subtitle:
-                            'Panduan cepat untuk memahami earn, use, dan redeem.',
-                        iconColor: AppColors.textSecondary,
-                        onTap: _showGuideInfo,
-                      ),
-                      const SizedBox(height: 26),
-                      const _SectionTitle(
-                        title: 'Menu Rewards',
-                        subtitle:
-                            'Tukarkan poinmu dengan menu favorit yang tersedia hari ini.',
-                      ),
-                      const SizedBox(height: 14),
-                      Obx(() {
-                        final menus = menuController.menus;
+            child: RefreshIndicator(
+              color: AppColors.secondary,
+              onRefresh: () async {
+                if (Get.isRegistered<OrderController>()) {
+                  await Get.find<OrderController>().refreshCurrentUserData();
+                  await Get.find<OrderController>()
+                      .refreshOrdersAndCurrentOrder();
+                }
 
-                        if (menuController.isLoading.value) {
-                          return const SizedBox(
-                            height: 214,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.secondary,
+                appState.update();
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: [
+                  _CompactLoyaltyHeader(
+                    user: user,
+                    points: points,
+                    tierLabel: tierLabel,
+                    nextTierTitle: progressInfo.title,
+                    nextTierSubtitle: progressInfo.subtitle,
+                    progress: progressInfo.progress,
+                    progressText: progressInfo.progressText,
+                    tierAccent: tierAccent,
+                    onProfileTap: _openProfileTab,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _QuickInfoCard(
+                                title: 'Poin Aktif',
+                                value: Formatters.commas(points),
+                                subtitle: 'Siap digunakan',
+                                icon: Icons.stars_rounded,
+                                accentColor: AppColors.primary,
+                                softColor: AppColors.primarySoft,
+                                onTap: _showUsePointsInfo,
                               ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _QuickInfoCard(
+                                title: 'Membership',
+                                value: tierLabel,
+                                subtitle: 'Level saat ini',
+                                icon: Icons.workspace_premium_rounded,
+                                accentColor: tierAccent,
+                                softColor: tierAccent.withValues(alpha: 0.14),
+                                onTap: () => _showBenefitsInfo(tier),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        const _SectionTitle(
+                          title: 'Info Loyalty',
+                          subtitle:
+                              'Tap tiap kartu untuk melihat informasi lengkap seputar membership, poin, dan rewards.',
+                        ),
+                        const SizedBox(height: 14),
+                        _InfoEntryCard(
+                          icon: Icons.workspace_premium_rounded,
+                          title: 'Benefit Membership',
+                          subtitle:
+                              'Lihat benefit aktif sesuai tier membership kamu.',
+                          iconColor: tierAccent,
+                          onTap: () => _showBenefitsInfo(tier),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _FeatureCard(
+                                icon: Icons.shopping_bag_outlined,
+                                title: 'Cara Mendapatkan',
+                                subtitle:
+                                    'Poin didapat dari transaksi selesai dan mengikuti nominal belanja.',
+                                accentColor: AppColors.secondary,
+                                onTap: _showEarnInfo,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _FeatureCard(
+                                icon: Icons.account_balance_wallet_outlined,
+                                title: 'Cara Menggunakan',
+                                subtitle:
+                                    'Gunakan poin untuk checkout atau tukarkan ke reward tertentu.',
+                                accentColor: AppColors.primary,
+                                onTap: _showUsePointsInfo,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _InfoEntryCard(
+                          icon: Icons.rule_folder_outlined,
+                          title: 'Aturan Penting Loyalty',
+                          subtitle:
+                              'Ringkasan aturan penggunaan poin dan reward.',
+                          iconColor: AppColors.textPrimary,
+                          onTap: _showRulesInfo,
+                        ),
+                        _InfoEntryCard(
+                          icon: Icons.info_outline_rounded,
+                          title: 'Syarat & Ketentuan Poin',
+                          subtitle:
+                              'Masa berlaku, pembatalan transaksi, dan penyalahgunaan program.',
+                          iconColor: AppColors.textSecondary,
+                          onTap: _showTermsInfo,
+                        ),
+                        _InfoEntryCard(
+                          icon: Icons.payments_outlined,
+                          title: 'Aturan Voucher & Poin',
+                          subtitle:
+                              'Kombinasi promo, pembatasan penggunaan, dan alur checkout.',
+                          iconColor: AppColors.textSecondary,
+                          onTap: _showVoucherInfo,
+                        ),
+                        _InfoEntryCard(
+                          icon: Icons.help_outline_rounded,
+                          title: 'Panduan Program Rewards',
+                          subtitle:
+                              'Panduan cepat untuk memahami earn, use, dan redeem.',
+                          iconColor: AppColors.textSecondary,
+                          onTap: _showGuideInfo,
+                        ),
+                        const SizedBox(height: 26),
+                        const _SectionTitle(
+                          title: 'Menu Rewards',
+                          subtitle:
+                              'Tukarkan poinmu dengan menu favorit yang tersedia hari ini.',
+                        ),
+                        const SizedBox(height: 14),
+                        Obx(() {
+                          final menus = menuController.menus;
+
+                          if (menuController.isLoading.value) {
+                            return const SizedBox(
+                              height: 214,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (menus.isEmpty) {
+                            return const _EmptyRewardsCard();
+                          }
+
+                          final displayMenus = menus
+                              .where((menu) => menu.isAvailable)
+                              .take(6)
+                              .toList();
+
+                          if (displayMenus.isEmpty) {
+                            return const _EmptyRewardsCard();
+                          }
+
+                          return SizedBox(
+                            height: 214,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: displayMenus.length,
+                              itemBuilder: (context, index) {
+                                final menu = displayMenus[index];
+                                return _MenuRewardCard(menu: menu);
+                              },
+                            ),
                           );
-                        }
-
-                        if (menus.isEmpty) {
-                          return const _EmptyRewardsCard();
-                        }
-
-                        final displayMenus = menus
-                            .where((menu) => menu.isAvailable)
-                            .take(6)
-                            .toList();
-
-                        if (displayMenus.isEmpty) {
-                          return const _EmptyRewardsCard();
-                        }
-
-                        return SizedBox(
-                          height: 214,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: displayMenus.length,
-                            itemBuilder: (context, index) {
-                              final menu = displayMenus[index];
-                              return _MenuRewardCard(menu: menu);
-                            },
-                          ),
-                        );
-                      }),
-                    ],
+                        }),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

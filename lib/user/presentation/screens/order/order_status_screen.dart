@@ -208,12 +208,15 @@ class _CheckoutMode extends StatelessWidget {
       Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: _PaymentSuccessDialog(
+        child: _CheckoutQrDialog(
           order: order,
-          onTrackOrder: Get.back,
+          onTrackOrder: () {
+            Get.back();
+            controller.finishCheckoutAndOpenOrder(order);
+          },
           onBackHome: () {
             Get.back();
-            controller.goHome();
+            controller.finishCheckoutAndGoHome();
           },
         ),
       ),
@@ -315,184 +318,199 @@ class _CheckoutMode extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-            children: [
-              _BranchCard(branchName: branchName, branchAddress: branchAddress),
-              const SizedBox(height: 14),
-              _CompactOrderPreview(cart: cart),
-              const SizedBox(height: 24),
-              Text(
-                'Privileges',
-                style: AppTextStyles.heading2.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
+          child: RefreshIndicator(
+            color: AppColors.secondary,
+            onRefresh: () async {
+              controller.refreshCheckout();
+
+              if (Get.isRegistered<OrderController>()) {
+                await Get.find<OrderController>()
+                    .refreshOrdersAndCurrentOrder();
+              }
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+              children: [
+                _BranchCard(
+                  branchName: branchName,
+                  branchAddress: branchAddress,
                 ),
-              ),
-              const SizedBox(height: 12),
-              _SectionCard(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _PrivilegeRow(
-                      iconBg: AppColors.tertiaryLight,
-                      iconColor: AppColors.secondary,
-                      icon: Icons.confirmation_number_outlined,
-                      title: 'Apply Voucher',
-                      subtitle: appliedVoucher == null
-                          ? 'Pilih voucher yang tersedia'
-                          : appliedVoucher.code,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (appliedVoucher != null)
-                            GestureDetector(
-                              onTap: () {
-                                voucherController.clearAppliedVoucher();
-                                controller.refreshCheckout();
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.only(right: 8),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 18,
-                                  color: AppColors.textSecondary,
+                const SizedBox(height: 14),
+                _CompactOrderPreview(cart: cart),
+                const SizedBox(height: 24),
+                Text(
+                  'Privileges',
+                  style: AppTextStyles.heading2.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _SectionCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _PrivilegeRow(
+                        iconBg: AppColors.tertiaryLight,
+                        iconColor: AppColors.secondary,
+                        icon: Icons.confirmation_number_outlined,
+                        title: 'Apply Voucher',
+                        subtitle: appliedVoucher == null
+                            ? 'Pilih voucher yang tersedia'
+                            : appliedVoucher.code,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (appliedVoucher != null)
+                              GestureDetector(
+                                onTap: () {
+                                  voucherController.clearAppliedVoucher();
+                                  controller.refreshCheckout();
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.only(right: 8),
+                                  child: Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.textSecondary,
                             ),
-                          const Icon(
-                            Icons.chevron_right_rounded,
+                          ],
+                        ),
+                        onTap: () => _showVoucherDialog(context),
+                      ),
+                      const SizedBox(height: 14),
+                      _PrivilegeToggleRow(
+                        iconBg: const Color(0xFFDDF0F7),
+                        iconColor: const Color(0xFF2B80B9),
+                        icon: Icons.local_offer_outlined,
+                        title: 'Gunakan Poin',
+                        subtitle: appState.isLoggedIn
+                            ? 'Poin tersedia: ${Formatters.commas(appState.user.loyaltyPoints)} poin'
+                            : 'Login dulu untuk menggunakan poin',
+                        value: isPointsOn,
+                        onChanged: _togglePoints,
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSoft,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.cardBorder),
+                        ),
+                        child: Text(
+                          isPointsOn
+                              ? 'Menggunakan ${Formatters.commas(controller.pointsToUse)} poin senilai ${Formatters.currency(pointsDiscountRupiah)}. Maksimal penggunaan poin adalah 10% subtotal pesanan ini.'
+                              : 'Maksimal poin yang dapat digunakan adalah 10% subtotal pesanan ini.',
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12,
+                            height: 1.45,
                             color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _SectionCard(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Order Summary',
+                        style: AppTextStyles.heading3.copyWith(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      _summaryRow(
+                        'Subtotal',
+                        Formatters.currency(controller.subtotalPreview),
+                      ),
+                      const SizedBox(height: 10),
+                      _summaryRow(
+                        'Diskon Voucher',
+                        controller.voucherDiscountPreview > 0
+                            ? '- ${Formatters.currency(controller.voucherDiscountPreview)}'
+                            : '- Rp 0',
+                        valueColor: controller.voucherDiscountPreview > 0
+                            ? AppColors.success
+                            : AppColors.textSecondary,
+                      ),
+                      const SizedBox(height: 10),
+                      _summaryRow(
+                        'Poin digunakan',
+                        '- ${Formatters.currency(pointsDiscountRupiah)}',
+                        valueColor: pointsDiscountRupiah > 0
+                            ? AppColors.secondary
+                            : AppColors.textSecondary,
+                      ),
+                      const SizedBox(height: 14),
+                      const Divider(height: 1, color: AppColors.divider),
+                      const SizedBox(height: 14),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'TOTAL AKHIR',
+                              style: AppTextStyles.captionBold.copyWith(
+                                fontSize: 12,
+                                letterSpacing: 0.6,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            Formatters.currency(controller.grandTotalPreview),
+                            style: AppTextStyles.priceLarge.copyWith(
+                              fontSize: 20,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ],
                       ),
-                      onTap: () => _showVoucherDialog(context),
-                    ),
-                    const SizedBox(height: 14),
-                    _PrivilegeToggleRow(
-                      iconBg: const Color(0xFFDDF0F7),
-                      iconColor: const Color(0xFF2B80B9),
-                      icon: Icons.local_offer_outlined,
-                      title: 'Gunakan Poin',
-                      subtitle: appState.isLoggedIn
-                          ? 'Poin tersedia: ${Formatters.commas(appState.user.loyaltyPoints)} poin'
-                          : 'Login dulu untuk menggunakan poin',
-                      value: isPointsOn,
-                      onChanged: _togglePoints,
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceSoft,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.cardBorder),
-                      ),
-                      child: Text(
-                        isPointsOn
-                            ? 'Menggunakan ${Formatters.commas(controller.pointsToUse)} poin senilai ${Formatters.currency(pointsDiscountRupiah)}. Maksimal penggunaan poin adalah 10% subtotal pesanan ini.'
-                            : 'Maksimal poin yang dapat digunakan adalah 10% subtotal pesanan ini.',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 12,
-                          height: 1.45,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              _SectionCard(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Order Summary',
-                      style: AppTextStyles.heading3.copyWith(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    _summaryRow(
-                      'Subtotal',
-                      Formatters.currency(controller.subtotalPreview),
-                    ),
-                    const SizedBox(height: 10),
-                    _summaryRow(
-                      'Diskon Voucher',
-                      controller.voucherDiscountPreview > 0
-                          ? '- ${Formatters.currency(controller.voucherDiscountPreview)}'
-                          : '- Rp 0',
-                      valueColor: controller.voucherDiscountPreview > 0
-                          ? AppColors.success
-                          : AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: 10),
-                    _summaryRow(
-                      'Poin digunakan',
-                      '- ${Formatters.currency(pointsDiscountRupiah)}',
-                      valueColor: pointsDiscountRupiah > 0
-                          ? AppColors.secondary
-                          : AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: 14),
-                    const Divider(height: 1, color: AppColors.divider),
-                    const SizedBox(height: 14),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'TOTAL AKHIR',
-                            style: AppTextStyles.captionBold.copyWith(
-                              fontSize: 12,
-                              letterSpacing: 0.6,
-                              color: AppColors.textSecondary,
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              (controller.pointsToUse > 0 ||
+                                      controller.voucherDiscountPreview > 0)
+                                  ? 'Transaksi ini tidak mendapatkan poin baru.'
+                                  : 'Estimasi poin didapat: ${Formatters.commas(Get.find<AppStateController>().calculateEarnedPoints(controller.subtotalPreview))}',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ),
-                        ),
-                        Text(
-                          Formatters.currency(controller.grandTotalPreview),
-                          style: AppTextStyles.priceLarge.copyWith(
-                            fontSize: 20,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            (controller.pointsToUse > 0 ||
-                                    controller.voucherDiscountPreview > 0)
-                                ? 'Transaksi ini tidak mendapatkan poin baru.'
-                                : 'Estimasi poin didapat: ${Formatters.commas(Get.find<AppStateController>().calculateEarnedPoints(controller.subtotalPreview))}',
+                          Text(
+                            'Inclusive of Tax',
                             style: AppTextStyles.caption.copyWith(
-                              fontSize: 12,
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
                               color: AppColors.textSecondary,
                             ),
                           ),
-                        ),
-                        Text(
-                          'Inclusive of Tax',
-                          style: AppTextStyles.caption.copyWith(
-                            fontSize: 11,
-                            fontStyle: FontStyle.italic,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         Container(
@@ -1102,12 +1120,12 @@ class _ItemImage extends StatelessWidget {
   }
 }
 
-class _PaymentSuccessDialog extends StatelessWidget {
+class _CheckoutQrDialog extends StatelessWidget {
   final OrderModel order;
   final VoidCallback onTrackOrder;
   final VoidCallback onBackHome;
 
-  const _PaymentSuccessDialog({
+  const _CheckoutQrDialog({
     required this.order,
     required this.onTrackOrder,
     required this.onBackHome,
@@ -1115,21 +1133,29 @@ class _PaymentSuccessDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final earnedText = order.pointsEarned > 0
-        ? '+${order.pointsEarned} poin berhasil didapat'
-        : 'Transaksi ini tidak menghasilkan poin baru.';
-
-    final rewardDescription = order.pointsEarned > 0
-        ? 'Poin sudah otomatis masuk ke akunmu dan bisa dipakai di transaksi berikutnya.'
-        : 'Karena transaksi ini memakai promo atau potongan, poin baru tidak ditambahkan.';
-
     final qrData = jsonEncode({
+      'type': 'offline_order_payment',
       'order_id': order.id,
-      'queue': order.queueNumber,
+      'queue_number': order.queueNumber,
       'branch': order.branchName,
-      'total': order.grandTotal,
+      'order_type': order.orderType,
+      'payment_status': 'menunggu_pembayaran_kasir',
+      'subtotal': order.subtotal,
+      'discount_amount': order.discountAmount,
+      'points_used': order.pointsUsed,
+      'points_discount': order.pointsUsed * 1000,
+      'grand_total': order.grandTotal,
       'items': order.items
-          .map((e) => {'name': e.menuItem.name, 'qty': e.qty})
+          .map(
+            (e) => {
+              'menu_id': e.menuItem.id,
+              'name': e.menuItem.name,
+              'qty': e.qty,
+              'unit_price': e.unitPrice,
+              'subtotal': e.subtotal,
+              'notes': e.notes,
+            },
+          )
           .toList(),
     });
 
@@ -1170,7 +1196,7 @@ class _PaymentSuccessDialog extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Pesanan Berhasil!',
+                      'QR Pesanan Dibuat',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.heading2.copyWith(
                         fontSize: 22,
@@ -1180,7 +1206,7 @@ class _PaymentSuccessDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tunjukkan QR ini ke kasir',
+                      'Tunjukkan QR ini ke kasir untuk pembayaran',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodySecondary.copyWith(
                         fontSize: 13,
@@ -1265,7 +1291,7 @@ class _PaymentSuccessDialog extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
-                            Icons.workspace_premium_rounded,
+                            Icons.receipt_long_rounded,
                             color: AppColors.primary,
                             size: 24,
                           ),
@@ -1276,7 +1302,7 @@ class _PaymentSuccessDialog extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'POINT REWARD',
+                                'REKAPAN PESANAN',
                                 style: AppTextStyles.label.copyWith(
                                   fontSize: 10,
                                   letterSpacing: 0.9,
@@ -1285,7 +1311,7 @@ class _PaymentSuccessDialog extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                earnedText,
+                                Formatters.currency(order.grandTotal),
                                 style: AppTextStyles.heading3.copyWith(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -1295,7 +1321,7 @@ class _PaymentSuccessDialog extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                rewardDescription,
+                                'QR berisi detail menu, qty, harga item, diskon, dan total pembayaran.',
                                 style: AppTextStyles.bodySecondary.copyWith(
                                   fontSize: 12,
                                   height: 1.5,
@@ -1322,14 +1348,14 @@ class _PaymentSuccessDialog extends StatelessWidget {
                     child: Row(
                       children: [
                         const Icon(
-                          Icons.receipt_long_rounded,
+                          Icons.qr_code_scanner_rounded,
                           size: 18,
                           color: AppColors.secondary,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Scan QR di kasir, lalu pantau status pesananmu di sini.',
+                            'Setelah kasir menerima pembayaran dan admin memproses pesanan, poin loyalty akan muncul otomatis.',
                             style: AppTextStyles.caption.copyWith(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -1427,57 +1453,57 @@ class _StatusMode extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: AppColors.gradientQueue,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            children: [
-              Text(
-                'Queue Number',
-                style: AppTextStyles.captionBold.copyWith(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                order.queueNumber,
-                style: AppTextStyles.display.copyWith(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _statusLabel(order.status),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        _buildStepper(order.status, steps, currentIndex),
-        const SizedBox(height: 10),
-        if (order.status == OrderStatus.pending ||
-            order.status == OrderStatus.confirmed ||
-            order.status == OrderStatus.ready) ...[
-          _QrCard(order: order),
-          const SizedBox(height: 10),
-        ],
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
             children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: AppColors.gradientQueue,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Queue Number',
+                      style: AppTextStyles.captionBold.copyWith(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      order.queueNumber,
+                      style: AppTextStyles.display.copyWith(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _statusLabel(order.status),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              _buildStepper(order.status, steps, currentIndex),
+              const SizedBox(height: 14),
+              if (order.status == OrderStatus.pending ||
+                  order.status == OrderStatus.confirmed ||
+                  order.status == OrderStatus.ready) ...[
+                _QrCard(order: order),
+                const SizedBox(height: 14),
+              ],
               _SectionCard(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -1635,7 +1661,7 @@ class _StatusMode extends StatelessWidget {
       case OrderStatus.confirmed:
         return 'Pesanan sedang diproses';
       case OrderStatus.ready:
-        return 'Pesanan siap diambil! 🎉';
+        return 'Pesanan siap diambil! ';
       case OrderStatus.done:
         return 'Pesanan selesai';
       case OrderStatus.cancelled:
@@ -1652,90 +1678,105 @@ class _QrCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final qrData = jsonEncode({
+      'type': 'offline_order_payment',
       'order_id': order.id,
-      'queue': order.queueNumber,
+      'queue_number': order.queueNumber,
       'branch': order.branchName,
-      'total': order.grandTotal,
+      'order_type': order.orderType,
+      'payment_status': order.status == OrderStatus.pending
+          ? 'menunggu_pembayaran_kasir'
+          : 'pembayaran_diterima',
+      'subtotal': order.subtotal,
+      'discount_amount': order.discountAmount,
+      'points_used': order.pointsUsed,
+      'points_discount': order.pointsUsed * 1000,
+      'grand_total': order.grandTotal,
       'items': order.items
-          .map((e) => {'name': e.menuItem.name, 'qty': e.qty})
+          .map(
+            (e) => {
+              'menu_id': e.menuItem.id,
+              'name': e.menuItem.name,
+              'qty': e.qty,
+              'unit_price': e.unitPrice,
+              'subtotal': e.subtotal,
+              'notes': e.notes,
+            },
+          )
           .toList(),
     });
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.cardBorder),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.secondaryDark.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.tertiaryLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.qr_code_rounded,
-                    color: AppColors.secondary,
-                    size: 20,
-                  ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondaryDark.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.tertiaryLight,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'QR Code Pesanan',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        'Tunjukkan ke kasir untuk diproses',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: const Icon(
+                  Icons.qr_code_rounded,
+                  color: AppColors.secondary,
+                  size: 20,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorder),
               ),
-              child: QrImageView(
-                data: qrData,
-                version: QrVersions.auto,
-                size: 180,
-                backgroundColor: Colors.white,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'QR Code Pesanan',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      'Tunjukkan ke kasir untuk diproses',
+                      style: AppTextStyles.caption.copyWith(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.cardBorder),
             ),
-          ],
-        ),
+            child: QrImageView(
+              data: qrData,
+              version: QrVersions.auto,
+              size: 180,
+              backgroundColor: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1823,42 +1864,6 @@ class _SectionCard extends StatelessWidget {
         ],
       ),
       child: child,
-    );
-  }
-}
-
-class _SegmentButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SegmentButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.primary : AppColors.surfaceGrey,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          height: 42,
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontSize: 13,
-              color: selected ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

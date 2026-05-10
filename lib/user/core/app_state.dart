@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../controllers/cart/cart_controller.dart';
 import '../data/models/branch_model.dart';
@@ -40,7 +41,12 @@ class AppStateController extends GetxController {
     update();
   }
 
-  void logout() {
+Future<void> logout() async {
+  try {
+    await Supabase.instance.client.auth.signOut();
+  } catch (e) {
+    Get.log('logout signOut error: $e');
+  } finally {
     _isLoggedIn = false;
     _user = null;
     selectedBranchRx.value = null;
@@ -54,7 +60,7 @@ class AppStateController extends GetxController {
 
     update();
   }
-
+}
   void setBranch(Branch branch) {
     if (selectedBranchRx.value?.id == branch.id) return;
     selectedBranchRx.value = branch;
