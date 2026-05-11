@@ -64,7 +64,6 @@ class VoucherRepository {
   Future<Map<String, int>> getUserUsageCountMapByVoucherId(String userId) {
     return remote.getUserUsageCountMapByVoucherId(userId);
   }
-}
 
   /// Returns true if the voucher code exists and is active but has already
   /// reached its usage limit. Used to show the correct error message.
@@ -77,3 +76,4 @@ class VoucherRepository {
       branchId: branchId,
     );
   }
+}  // ← SATU kurung kurawal penutup class di sini

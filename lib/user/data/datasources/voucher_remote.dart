@@ -151,12 +151,11 @@ class VoucherRemote {
     });
   }
 
-  int _toInt(dynamic value) {
+int _toInt(dynamic value) {
     if (value is int) return value;
     if (value is double) return value.toInt();
     return int.tryParse(value?.toString() ?? '0') ?? 0;
   }
-}
 
   /// Checks whether a voucher code exists and is active but has exhausted its
   /// usage limit. Used to surface the correct error message to the user.
@@ -187,3 +186,4 @@ class VoucherRemote {
 
     return used >= limit;
   }
+}  // ← ini penutup class VoucherRemote
