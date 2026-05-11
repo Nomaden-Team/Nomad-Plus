@@ -45,7 +45,7 @@ class RegisterScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         const Text(
-                          'Create\nYour Account',
+                          'Buat\nAkun Anda',
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w900,
@@ -82,7 +82,7 @@ class RegisterScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _sectionLabel('FULL NAME'),
+                              _sectionLabel('NAMA'),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: controller.nameCtrl,
@@ -95,7 +95,7 @@ class RegisterScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 18),
 
-                              _sectionLabel('EMAIL ADDRESS'),
+                              _sectionLabel('ALAMAT EMAIL'),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: controller.emailCtrl,
@@ -108,7 +108,7 @@ class RegisterScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 18),
 
-                              _sectionLabel('PHONE NUMBER'),
+                              _sectionLabel('NOMOR TELEPON'),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: controller.phoneCtrl,
@@ -121,7 +121,7 @@ class RegisterScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 18),
 
-                              _sectionLabel('PASSWORD'),
+                              _sectionLabel('KATA SANDI'),
                               const SizedBox(height: 8),
                               Obx(
                                 () => TextFormField(

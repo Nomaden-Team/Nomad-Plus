@@ -196,7 +196,7 @@ class LoginScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Welcome Back',
+                                    'Selamat Datang Kembali!',
                                     style: TextStyle(
                                       fontSize: isCompact ? 24 : 28,
                                       fontWeight: FontWeight.w900,
@@ -230,7 +230,7 @@ class LoginScreen extends StatelessWidget {
                                   ),
                                   SizedBox(height: isCompact ? 14 : 16),
 
-                                  _sectionLabel('PASSWORD'),
+                                  _sectionLabel('KATA SANDI'),
                                   const SizedBox(height: 8),
                                   Obx(
                                     () => TextFormField(

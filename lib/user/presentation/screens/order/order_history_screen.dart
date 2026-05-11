@@ -8,15 +8,30 @@ import '../../../core/routes/app_routes.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/order_model.dart';
 
-class OrderHistoryScreen extends StatelessWidget {
+class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final OrderController controller = Get.isRegistered<OrderController>()
+  State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+}
+
+class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+  late final OrderController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.isRegistered<OrderController>()
         ? Get.find<OrderController>()
         : Get.put(OrderController(), permanent: true);
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.fetchOrders();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return GetBuilder<OrderController>(
       init: controller,
       builder: (controller) {
@@ -94,15 +109,15 @@ class _OrderHistoryContentState extends State<_OrderHistoryContent> {
   int _statusPriority(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 0; // MENUNGGU
+        return 0;
       case OrderStatus.confirmed:
-        return 1; // DIPROSES
+        return 1;
       case OrderStatus.ready:
-        return 2; // SIAP
+        return 2;
       case OrderStatus.done:
-        return 3; // SELESAI
+        return 3;
       case OrderStatus.cancelled:
-        return 4; // DIBATALKAN
+        return 4;
     }
   }
 

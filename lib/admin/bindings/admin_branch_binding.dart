@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-
 import '../controllers/admin_branch_controller.dart';
 import '../data/datasources/admin_branch_remote.dart';
 import '../data/repositories/admin_branch_repository.dart';

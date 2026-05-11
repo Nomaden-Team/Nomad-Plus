@@ -10,12 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
   get: ^4.6.6
-  supabase_flutter: ^2.5.6
-  flutter_dotenv: ^5.1.0
   image_picker: ^1.2.1
   google_fonts: ^6.2.1
   qr_flutter: ^4.0.0
   flutter_launcher_icons: ^0.14.1
+  flutter_dotenv: ^5.1.0
+  supabase_flutter: ^2.5.6
 
 flutter_launcher_icons:
   android: "ic_launcher"

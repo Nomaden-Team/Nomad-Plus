@@ -132,16 +132,16 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       if (curatedSlides.isNotEmpty) ...[
                         const _SectionHeader(
-                          eyebrow: 'WEEKLY PICKS',
-                          title: 'Weekly Curations',
+                          eyebrow: 'PILIHAN MINGGU INI',
+                          title: 'Menu Pilihan untuk Kamu',
                         ),
                         const SizedBox(height: 14),
                         _WeeklyCurationsSlider(slides: curatedSlides),
                         const SizedBox(height: 28),
                       ],
                       const _SectionHeader(
-                        eyebrow: 'EXPLORE',
-                        title: 'Browse Categories',
+                        eyebrow: 'KATEGORI',
+                        title: "Kategori Menu",
                       ),
                       const SizedBox(height: 14),
                       SizedBox(
@@ -191,8 +191,8 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           const Expanded(
                             child: _SectionHeader(
-                              eyebrow: 'FEATURED MENU',
-                              title: 'Popular Nomads',
+                              eyebrow: 'Menu Unggulan',
+                              title: 'Menu Populer Minggu Ini',
                             ),
                           ),
                           if (homeCtrl.isRefreshingMenus.value)
@@ -526,7 +526,7 @@ class _TopHeaderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'CURRENT BRANCH',
+                    'Lokasi Cabang',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,

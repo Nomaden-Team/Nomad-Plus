@@ -477,10 +477,21 @@ class _OrderItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = (item['name'] ?? item['menu_name'] ?? 'Menu Item').toString();
+  final menuItemData = item['menu_items'];
+  final menuItem = menuItemData is Map
+      ? Map<String, dynamic>.from(menuItemData)
+      : <String, dynamic>{};
+
+  final name = (menuItem['name'] ??
+      item['name'] ??
+      item['menu_name'] ??
+      'Menu tidak diketahui').toString();
+  final imageUrl = (menuItem['image_url'] ??
+      item['image_url'] ??
+      item['image'] ??
+      '').toString();
     final qty = (item['qty'] ?? item['quantity'] ?? 1).toString();
     final note = (item['note'] ?? item['notes'] ?? '').toString();
-    final imageUrl = (item['image_url'] ?? item['image'] ?? '').toString();
 
     final rawOptions = item['options'];
     final List<String> options = rawOptions is List

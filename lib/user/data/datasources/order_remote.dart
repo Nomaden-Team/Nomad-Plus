@@ -53,6 +53,65 @@ class OrderRemote {
         });
       }
 
+      // ─── Kurangi poin user jika ada poin yang dipakai ───────────────────────
+      // SESUAIKAN: ganti 'profiles' dengan nama tabel user kamu
+      //            ganti 'points' dengan nama kolom poin kamu
+      if (order.pointsUsed > 0) {
+        try {
+          // Ambil poin user saat ini
+          final userRes = await client
+              .from('profiles') // <-- SESUAIKAN nama tabel
+              .select('points') // <-- SESUAIKAN nama kolom poin
+              .eq('id', order.userId)
+              .single();
+
+          final currentPoints = _toInt(userRes['points']); // <-- SESUAIKAN nama kolom poin
+          final newPoints = (currentPoints - order.pointsUsed).clamp(0, double.maxFinite.toInt());
+
+          await client
+              .from('profiles') // <-- SESUAIKAN nama tabel
+              .update({'points': newPoints}) // <-- SESUAIKAN nama kolom poin
+              .eq('id', order.userId);
+
+          print('=== POIN DIKURANGI ===');
+          print('Sebelum : $currentPoints');
+          print('Dipakai : ${order.pointsUsed}');
+          print('Sesudah : $newPoints');
+        } catch (e) {
+          // Jangan gagalkan order hanya karena update poin gagal
+          // Tapi tetap log supaya bisa dideteksi
+          print('=== GAGAL UPDATE POIN USER ===');
+          print(e);
+        }
+      }
+
+      // ─── Tambahkan poin earned ke user ──────────────────────────────────────
+      if (order.pointsEarned > 0) {
+        try {
+          final userRes = await client
+              .from('profiles') // <-- SESUAIKAN nama tabel
+              .select('points') // <-- SESUAIKAN nama kolom poin
+              .eq('id', order.userId)
+              .single();
+
+          final currentPoints = _toInt(userRes['points']); // <-- SESUAIKAN nama kolom poin
+          final newPoints = currentPoints + order.pointsEarned;
+
+          await client
+              .from('profiles') // <-- SESUAIKAN nama tabel
+              .update({'points': newPoints}) // <-- SESUAIKAN nama kolom poin
+              .eq('id', order.userId);
+
+          print('=== POIN DITAMBAHKAN ===');
+          print('Sebelum : $currentPoints');
+          print('Earned  : ${order.pointsEarned}');
+          print('Sesudah : $newPoints');
+        } catch (e) {
+          print('=== GAGAL TAMBAH POIN EARNED ===');
+          print(e);
+        }
+      }
+
       return order.copyWith(id: orderId);
     } on PostgrestException catch (e) {
       print('=== POSTGREST ERROR ===');
@@ -69,76 +128,128 @@ class OrderRemote {
   }
 
   Future<List<OrderModel>> getOrdersByUser(String userId) async {
-    final response = await client
-        .from('orders')
-        .select('''
-          *,
-          branches (name),
-          order_items (
+    print('=== FETCHING ORDERS FOR USER: $userId ===');
+
+    try {
+      final response = await client
+          .from('orders')
+          .select('''
             *,
-            menu_items (
+            branches (name),
+            order_items (
               *,
-              categories (name)
+              menu_items (
+                *,
+                categories (name)
+              )
             )
-          )
-        ''')
-        .eq('user_id', userId)
-        .order('created_at', ascending: false);
+          ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
 
-    return (response as List).map((e) {
-      final itemsRaw = e['order_items'] as List? ?? [];
+      final rawList = response as List;
+      print('=== TOTAL ORDERS DITEMUKAN: ${rawList.length} ===');
 
-      final items = itemsRaw.map((item) {
-        final menu = item['menu_items'] as Map<String, dynamic>;
-        final category = menu['categories'];
+      if (rawList.isEmpty) {
+        print('=== TIDAK ADA ORDER — cek RLS policy di Supabase untuk tabel orders, order_items, menu_items, categories ===');
+        return [];
+      }
 
-        final menuItem = MenuItem(
-          id: menu['id'].toString(),
-          branchId: menu['branch_id'].toString(),
-          categoryId: menu['category_id'].toString(),
-          name: menu['name'],
-          description: menu['description'] ?? '',
-          price: _toInt(menu['price']),
-          imageUrl: menu['image_url'] ?? '',
-          isAvailable: menu['is_available'] ?? true,
-          orderCount: _toInt(menu['order_count']),
-          categoryName: category is Map ? (category['name'] ?? '') : '',
-        );
+      final orders = <OrderModel>[];
 
-        final notes = (item['notes'] ?? '').toString();
-        final unitPrice = _toInt(item['price']);
+      for (final e in rawList) {
+        try {
+          final itemsRaw = e['order_items'] as List? ?? [];
+          print('--- Order ID: ${e['id']} | Jumlah items: ${itemsRaw.length}');
 
-        return CartItem(
-          entryId: CartItem.entryKey(menuItem.id, 'history', notes: notes),
-          menuItem: menuItem,
-          qty: _toInt(item['quantity']),
-          notes: notes,
-          unitPrice: unitPrice,
-          customizationKey: 'history',
-        );
-      }).toList();
+          // Jika order_items kosong padahal harusnya ada, kemungkinan RLS tabel order_items
+          // memblokir akses. Cek policy SELECT di tabel order_items di Supabase dashboard.
+          final items = <CartItem>[];
 
-      return OrderModel(
-        id: e['id'].toString(),
-        userId: e['user_id'].toString(),
-        queueNumber: e['queue_number'] ?? '',
-        branchId: e['branch_id'] ?? '',
-        branchName: e['branches']?['name'] ?? '',
-        items: items,
-        paymentMethod: (e['payment_method'] ?? 'NomadPay').toString(),
-        status: _parseStatus(e['status']),
-        createdAt: DateTime.parse(e['created_at']),
-        subtotal: _toInt(e['subtotal']),
-        discountAmount: _toInt(e['discount_amount']),
-        serviceFee: _toInt(e['service_fee']),
-        grandTotal: _toInt(e['grand_total']),
-        pointsEarned: _toInt(e['points_earned']),
-        pointsUsed: _toInt(e['points_used']),
-        voucherCode: e['voucher_code']?.toString(),
-        orderType: e['order_type'] ?? 'dine_in',
-        notes: e['notes'],
-      );
-    }).toList();
+          for (final item in itemsRaw) {
+            try {
+              final menu = item['menu_items'] as Map<String, dynamic>?;
+
+              if (menu == null) {
+                // Lewati item ini saja, jangan gagalkan seluruh order
+                print('!!! SKIP item ${item['id']} — menu_items null (cek RLS tabel menu_items)');
+                continue;
+              }
+
+              final category = menu['categories'];
+
+              final menuItem = MenuItem(
+                id: menu['id'].toString(),
+                branchId: menu['branch_id'].toString(),
+                categoryId: menu['category_id'].toString(),
+                name: menu['name'],
+                description: menu['description'] ?? '',
+                price: _toInt(menu['price']),
+                imageUrl: menu['image_url'] ?? '',
+                isAvailable: menu['is_available'] ?? true,
+                orderCount: _toInt(menu['order_count']),
+                categoryName: category is Map ? (category['name'] ?? '') : '',
+              );
+
+              final notes = (item['notes'] ?? '').toString();
+              final unitPrice = _toInt(item['price']);
+
+              items.add(CartItem(
+                entryId: CartItem.entryKey(menuItem.id, 'history', notes: notes),
+                menuItem: menuItem,
+                qty: _toInt(item['quantity']),
+                notes: notes,
+                unitPrice: unitPrice,
+                customizationKey: 'history',
+              ));
+            } catch (itemErr) {
+              // Lewati item yang error, jangan crash seluruh list
+              print('!!! ERROR parsing item ${item['id']}: $itemErr');
+              continue;
+            }
+          }
+
+          orders.add(OrderModel(
+            id: e['id'].toString(),
+            userId: e['user_id'].toString(),
+            queueNumber: e['queue_number'] ?? '',
+            branchId: e['branch_id'] ?? '',
+            branchName: e['branches']?['name'] ?? '',
+            items: items,
+            paymentMethod: (e['payment_method'] ?? 'NomadPay').toString(),
+            status: _parseStatus(e['status']),
+            createdAt: DateTime.parse(e['created_at']),
+            subtotal: _toInt(e['subtotal']),
+            discountAmount: _toInt(e['discount_amount']),
+            serviceFee: _toInt(e['service_fee']),
+            grandTotal: _toInt(e['grand_total']),
+            pointsEarned: _toInt(e['points_earned']),
+            pointsUsed: _toInt(e['points_used']),
+            voucherCode: e['voucher_code']?.toString(),
+            orderType: e['order_type'] ?? 'dine_in',
+            notes: e['notes'],
+          ));
+        } catch (orderErr) {
+          // Lewati order yang error, jangan crash seluruh list
+          print('!!! ERROR parsing order ${e['id']}: $orderErr');
+          continue;
+        }
+      }
+
+      print('=== BERHASIL PARSE ${orders.length} ORDERS ===');
+      return orders;
+    } on PostgrestException catch (e) {
+      print('=== POSTGREST ERROR getOrdersByUser ===');
+      print('message : ${e.message}');
+      print('code    : ${e.code}');
+      print('details : ${e.details}');
+      print('hint    : ${e.hint}');
+      rethrow;
+    } catch (e) {
+      print('=== UNKNOWN ERROR getOrdersByUser ===');
+      print(e);
+      rethrow;
+    }
   }
 
   String _toDbStatus(OrderStatus status) {

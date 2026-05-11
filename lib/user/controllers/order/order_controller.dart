@@ -128,24 +128,32 @@ class OrderController extends GetxController {
 
   Future<void> fetchOrders() async {
     try {
-      if (!appState.isLoggedIn) return;
+      if (!appState.isLoggedIn) {
+        print('=== fetchOrders: user belum login');
+        return;
+      }
 
       final userId = appState.user.id;
-      if (userId.trim().isEmpty) return;
+      print('=== fetchOrders userId: $userId');
+      if (userId.trim().isEmpty) {
+        print('=== fetchOrders: userId kosong');
+        return;
+      }
 
       isLoading = true;
       update();
 
       final result = await orderRepo.getOrders(userId);
+      print('=== fetchOrders result: ${result.length} orders');
       orders = result;
     } catch (e) {
+      print('=== fetchOrders ERROR: $e');
       Get.log('fetchOrders error: $e');
     } finally {
       isLoading = false;
       update();
     }
   }
-
   void refreshCheckout() {
     update();
   }
@@ -283,8 +291,9 @@ class OrderController extends GetxController {
     update();
 
     final isPaymentAccepted = updatedStatus == OrderStatus.confirmed;
+    final isOrderDone = updatedStatus == OrderStatus.done;
 
-    if (isPaymentAccepted &&
+    if ((isPaymentAccepted || isOrderDone) &&
         !_syncedAcceptedPaymentOrderIds.contains(orderId)) {
       _syncedAcceptedPaymentOrderIds.add(orderId);
 
@@ -306,6 +315,7 @@ class OrderController extends GetxController {
         );
       }
     }
+
 
     await fetchOrders();
   }
