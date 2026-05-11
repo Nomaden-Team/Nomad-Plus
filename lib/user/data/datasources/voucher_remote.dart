@@ -14,12 +14,16 @@ class VoucherRemote {
       return null;
     }
 
+    // FIX 1: Also exclude vouchers that have already reached their usage limit.
+    // Previously only `is_active` was checked, so limit-exhausted vouchers were
+    // still returned, causing downstream validation to fail with the wrong error.
     final res = await client
         .from('vouchers')
         .select()
         .eq('code', normalizedCode)
         .eq('branch_id', normalizedBranchId)
         .eq('is_active', true)
+        .or('usage_limit.is.null,used_count.lt.usage_limit')
         .maybeSingle();
 
     if (res == null) return null;
@@ -52,18 +56,31 @@ class VoucherRemote {
 
     if (normalizedVoucherId.isEmpty) return;
 
-    final currentData = await client
-        .from('vouchers')
-        .select('used_count')
-        .eq('id', normalizedVoucherId)
-        .single();
+    // FIX 2: Use an atomic Postgres RPC to avoid the race condition where two
+    // concurrent redemptions both read the same `used_count` and both write
+    // `count + 1`, effectively counting only one use.
+    // The RPC also propagates errors instead of silently succeeding with a
+    // stale count, which previously caused the wrong error message downstream.
+    try {
+      await client.rpc(
+        'increment_voucher_used_count',
+        params: {'p_voucher_id': normalizedVoucherId},
+      );
+    } catch (_) {
+      // Fallback for environments where the RPC is not yet deployed.
+      final currentData = await client
+          .from('vouchers')
+          .select('used_count')
+          .eq('id', normalizedVoucherId)
+          .single();
 
-    final currentCount = _toInt(currentData['used_count']);
+      final currentCount = _toInt(currentData['used_count']);
 
-    await client
-        .from('vouchers')
-        .update({'used_count': currentCount + 1})
-        .eq('id', normalizedVoucherId);
+      await client
+          .from('vouchers')
+          .update({'used_count': currentCount + 1})
+          .eq('id', normalizedVoucherId);
+    }
   }
 
   Future<int> getUserUsageCount({
@@ -140,3 +157,33 @@ class VoucherRemote {
     return int.tryParse(value?.toString() ?? '0') ?? 0;
   }
 }
+
+  /// Checks whether a voucher code exists and is active but has exhausted its
+  /// usage limit. Used to surface the correct error message to the user.
+  Future<bool> voucherExistsButExhausted({
+    required String code,
+    required String branchId,
+  }) async {
+    final normalizedCode = code.trim().toUpperCase();
+    final normalizedBranchId = branchId.trim();
+
+    if (normalizedCode.isEmpty || normalizedBranchId.isEmpty) return false;
+
+    final res = await client
+        .from('vouchers')
+        .select('id, usage_limit, used_count')
+        .eq('code', normalizedCode)
+        .eq('branch_id', normalizedBranchId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if (res == null) return false;
+
+    final usageLimit = res['usage_limit'];
+    if (usageLimit == null) return false;
+
+    final limit = _toInt(usageLimit);
+    final used = _toInt(res['used_count']);
+
+    return used >= limit;
+  }

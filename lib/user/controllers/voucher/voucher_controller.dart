@@ -183,7 +183,18 @@ class VoucherController extends GetxController {
       );
 
       if (data == null) {
-        return 'Voucher tidak tersedia untuk cabang ini';
+        // FIX 4: Distinguish between "code not found" and "limit exhausted".
+        // getVoucher() now filters out limit-exhausted vouchers, so a null
+        // result could mean either. Do a second lookup without the limit filter
+        // to return the correct user-facing error message.
+        final existsButExhausted = await _repository.voucherExistsButExhausted(
+          normalized,
+          branchId: branchId,
+        );
+        if (existsButExhausted) {
+          return 'Kuota voucher ini sudah habis';
+        }
+        return 'Voucher tidak ditemukan atau tidak berlaku untuk cabang ini';
       }
 
       final voucher = VoucherModel.fromMap(data);
@@ -254,7 +265,16 @@ class VoucherController extends GetxController {
 
       return true;
     } catch (e) {
-      Get.log('Error finalizeVoucherUsage: $e');
+      // FIX 5: Log the real error so it's visible during debugging.
+      // Previously the silent catch in the repository masked increment failures,
+      // leaving `used_count` stale and causing the wrong error for the next user.
+      Get.log('Error finalizeVoucherUsage: $e — usage record saved, but used_count increment may have failed.');
+
+      // Still reload vouchers so the UI reflects the latest server state.
+      try {
+        await loadVouchers();
+      } catch (_) {}
+
       return false;
     }
   }

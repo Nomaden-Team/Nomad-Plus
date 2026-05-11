@@ -42,10 +42,13 @@ class VoucherRepository {
       orderId: orderId,
     );
 
-    try {
-      await remote.incrementVoucherUsedCount(voucherId);
-    } catch (_) {
-    }
+    // FIX 3: No longer silently swallowing the increment error.
+    // If incrementVoucherUsedCount fails, `used_count` stays stale in the DB,
+    // which causes the next user's `validate()` to skip the limit check and
+    // fall through to `minOrderValue`, producing the wrong error message.
+    // Let the exception propagate so the caller (finalizeVoucherUsage) can log
+    // and surface it, and the atomic RPC in voucher_remote handles the race.
+    await remote.incrementVoucherUsedCount(voucherId);
   }
 
   Future<int> getUserUsageCount({
@@ -62,3 +65,15 @@ class VoucherRepository {
     return remote.getUserUsageCountMapByVoucherId(userId);
   }
 }
+
+  /// Returns true if the voucher code exists and is active but has already
+  /// reached its usage limit. Used to show the correct error message.
+  Future<bool> voucherExistsButExhausted(
+    String code, {
+    required String branchId,
+  }) {
+    return remote.voucherExistsButExhausted(
+      code: code,
+      branchId: branchId,
+    );
+  }
